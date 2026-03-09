@@ -1,6 +1,8 @@
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
 import { Roboto } from 'next/font/google';
 import ThemeRegistry from '../ThemeRegistry';
+import { Provider } from 'react-redux';
+import store from '@/store';
 
 const roboto = Roboto({
   weight: ['300', '400', '500', '700'],
@@ -16,8 +18,10 @@ export default function RootLayout({ children, modal }: { children: React.ReactN
       <body>
         <AppRouterCacheProvider>
           <ThemeRegistry>
-            {children}
-            {modal}
+            <Provider store={store}>
+              {children}
+              {modal}
+            </Provider>
           </ThemeRegistry>
         </AppRouterCacheProvider>
       </body>
