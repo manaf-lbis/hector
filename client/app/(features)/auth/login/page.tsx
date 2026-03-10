@@ -1,14 +1,12 @@
-import { AuthForm } from "@/components/auth/AuthForm"
+import AuthForm from "@/components/auth/AuthForm"
 
-const page = () => {
+
+export default function LoginPage() {
     return (
-
         <div>
-            original login
             <AuthForm type='login' />
         </div>
 
     )
 }
 
-export default page

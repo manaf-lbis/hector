@@ -3,6 +3,7 @@ import { Roboto } from 'next/font/google';
 import ThemeRegistry from '../ThemeRegistry';
 import { Provider } from 'react-redux';
 import store from '@/store';
+import StoreProvider from '../StoreProvider';
 
 const roboto = Roboto({
   weight: ['300', '400', '500', '700'],
@@ -18,10 +19,10 @@ export default function RootLayout({ children, modal }: { children: React.ReactN
       <body>
         <AppRouterCacheProvider>
           <ThemeRegistry>
-            <Provider store={store}>
+            <StoreProvider>
               {children}
               {modal}
-            </Provider>
+            </StoreProvider>
           </ThemeRegistry>
         </AppRouterCacheProvider>
       </body>

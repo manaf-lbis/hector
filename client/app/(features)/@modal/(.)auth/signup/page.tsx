@@ -1,12 +1,10 @@
-import { Dialog } from "@mui/material"
-import { AuthForm } from "@/components/auth/AuthForm"
+import { Dialog } from "@mui/material";
+import AuthForm from "@/components/auth/AuthForm";
 
-const page = () => {
+export default function SignupPage() {
   return (
     <Dialog open={true}>
-      <AuthForm  type="signup" />
+      <AuthForm type="signup" />
     </Dialog>
-  )
+  );
 }
-
-export default page

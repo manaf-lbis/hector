@@ -1,88 +1,128 @@
-import { Button, TextField, Typography, Stack } from "@mui/material";
-import { useRouter } from "next/navigation";
+import { Stack, TextField, Button, Typography } from '@mui/material';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
-interface Props {
+import { validateFullName, validateEmailOrPhone } from '@/utils/validators/formValidator';
+
+type Props = {
   type: 'login' | 'signup';
-  form: { fullName: string; email: string; phone: string; identifier: string };
-  errors: { fullName: string; email: string; phone: string; identifier: string };
+  formData: any;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onNext: () => void;
-}
+  onSubmit: () => void;
+  isLoading: boolean;
+};
 
-const UserIdentifierForm = ({ type, form, errors, onChange, onNext }: Props) => {
+export default function UserIdentifierForm({ type, formData, onChange, onSubmit, isLoading }: Props) {
   const router = useRouter();
+  const isSignup = type === 'signup';
+  const [attemptedSubmit, setAttemptedSubmit] = useState(false);
+
+  const getErrors = () => {
+    const err: Record<string, string> = {};
+
+    if (isSignup) {
+      const nameErr = validateFullName(formData.fullName);
+      if (nameErr) err.fullName = nameErr;
+
+      const emailErr = validateEmailOrPhone(formData.email);
+      if (emailErr) err.email = emailErr;
+
+      if (!formData.phone?.trim()) {
+        err.phone = 'Phone number is required';
+      } else {
+        const phoneErr = validateEmailOrPhone(formData.phone);
+        if (phoneErr) err.phone = phoneErr;
+      }
+    } else {
+      const idErr = validateEmailOrPhone(formData.identifier);
+      if (idErr) err.identifier = idErr;
+    }
+
+    return err;
+  };
+
+  const currentErrors = getErrors();
+  const hasError = Object.keys(currentErrors).length > 0;
+
+  const visibleErrors = attemptedSubmit ? currentErrors : {};
+
+  const handleClick = () => {
+    setAttemptedSubmit(true);
+    if (!hasError) {
+      onSubmit();  
+    }
+  };
 
   return (
     <Stack spacing={2.5}>
-      {type === 'signup' ? (
+      {isSignup ? (
         <>
-          <TextField 
+          <TextField
             name="fullName"
             label="Full Name"
-            value={form.fullName}
+            value={formData.fullName}
             onChange={onChange}
-            error={!!errors.fullName}
-            helperText={errors.fullName}
-            variant='filled' 
-            fullWidth 
+            error={!!visibleErrors.fullName}
+            helperText={visibleErrors.fullName || ' '}
+            variant="outlined"
+            fullWidth
           />
-          <TextField 
+          <TextField
             name="email"
-            label="Email Address"
+            label="Email"
             type="email"
-            value={form.email}
+            value={formData.email}
             onChange={onChange}
-            error={!!errors.email}
-            helperText={errors.email}
-            variant='filled' 
-            fullWidth 
+            error={!!visibleErrors.email}
+            helperText={visibleErrors.email || ' '}
+            variant="outlined"
+            fullWidth
           />
-          <TextField 
+          <TextField
             name="phone"
-            label="Mobile Number"
+            label="Phone Number"
             type="tel"
-            value={form.phone}
+            value={formData.phone}
             onChange={onChange}
-            error={!!errors.phone}
-            helperText={errors.phone}
-            variant='filled' 
-            fullWidth 
+            error={!!visibleErrors.phone}
+            helperText={visibleErrors.phone || ' '}
+            variant="outlined"
+            fullWidth
           />
         </>
       ) : (
-        <TextField 
+        <TextField
           name="identifier"
-          label="Email or Phone" 
-          value={form.identifier}
+          label="Email or Phone Number"
+          value={formData.identifier}
           onChange={onChange}
-          error={!!errors.identifier}
-          helperText={errors.identifier}
-          variant='filled' 
-          fullWidth 
+          error={!!visibleErrors.identifier}
+          helperText={visibleErrors.identifier || ' '}
+          variant="outlined"
+          fullWidth
+          autoFocus
         />
       )}
 
-      <Button 
-        variant="contained" 
-        size="large" 
-        onClick={onNext}
-        sx={{ py: 1.5, borderRadius: 2, textTransform: 'none', fontSize: '1.1rem' }}
+      <Button
+        variant="contained"
+        size="large"
+        fullWidth
+        onClick={handleClick}
+        disabled={isLoading}
       >
-        Get OTP
+        {isLoading ? 'Sending...' : 'Get OTP'}
       </Button>
 
-      <Typography variant="body2" textAlign="center" color="text.secondary">
-        {type === 'login' ? "Don't have an account? " : "Already have an account? "}
+      <Typography variant="body2" align="center" color="text.secondary">
+        {isSignup ? 'Already have an account?' : "Don't have an account?"}{' '}
         <Button
           variant="text"
-          onClick={() => router.replace(type === 'login' ? '/auth/signup' : '/auth/login')}
-          sx={{ p: 0, minWidth: 'auto', fontWeight: 700, textTransform: 'none', ml: 0.5 }}
+          onClick={() => router.replace(isSignup ? '/auth/login' : '/auth/signup')}
         >
-          {type === 'login' ? 'Sign up' : 'Log in'}
+          {isSignup ? 'Sign in' : 'Sign up'}
         </Button>
       </Typography>
     </Stack>
   );
-};
-
-export default UserIdentifierForm;
+}

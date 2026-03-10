@@ -1,45 +1,46 @@
-import { createApi } from "@reduxjs/toolkit/query/react";
-import { baseQuery } from "./baseApi/base.api";
-import { LoginRequest, ResendOtpRequest, SignupRequest } from '@/types/auth.type'
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { baseQuery } from './baseApi/base.api';
+import type { LoginInitiateRequest, OtpVerifyRequest, ResendOtpRequest, SignupInitiateRequest } from '@/types/auth.type';
 
 export const authApi = createApi({
-    reducerPath: "auth",
-    baseQuery: baseQuery,
+    reducerPath: 'authApi',
+    baseQuery,
+    tagTypes: ['User'],
     endpoints: (builder) => ({
-        login: builder.mutation<any, LoginRequest>({
-            query: (credentials) => ({
-                url: "auth/login",
-                method: "POST",
-                body: credentials,
+        initiateLogin: builder.mutation<any, LoginInitiateRequest>({
+            query: (body) => ({
+                url: '/auth/login',
+                method: 'POST',
+                body,
             }),
         }),
-        signup: builder.mutation<any, SignupRequest>({
-            query: (userData) => ({
-                url: "auth/signup",
-                method: "POST",
-                body: userData,
+        initiateSignup: builder.mutation<any, SignupInitiateRequest>({
+            query: (body) => ({
+                url: '/auth/signup',
+                method: 'POST',
+                body,
             }),
         }),
-        logout: builder.mutation({
-            query: () => ({
-                url: "auth/logout",
-                method: "POST",
+        verifyOtp: builder.mutation<any, OtpVerifyRequest>({
+            query: (body) => ({
+                url: '/auth/verify',
+                method: 'POST',
+                body,
             }),
         }),
         resendOtp: builder.mutation<any, ResendOtpRequest>({
-            query: (email) => ({
-                url: "auth/resend-otp",
-                method: "POST",
-                body: { email },
+            query: (body) => ({
+                url: '/auth/resend-otp',
+                method: 'POST',
+                body,
             }),
         }),
     }),
 });
 
-
 export const {
-    useLoginMutation,
-    useSignupMutation,
-    useLogoutMutation,
-    useResendOtpMutation
+    useVerifyOtpMutation,
+    useResendOtpMutation,
+    useInitiateLoginMutation,
+    useInitiateSignupMutation
 } = authApi;

@@ -1,14 +1,27 @@
-export interface LoginRequest {
+export interface LoginInitiateRequest {
+    identifier: string;
+}
+
+export interface LoginVerifyRequest {
     identifier: string;
     otp: string;
 }
 
-export interface SignupRequest {
+export interface SignupInitiateRequest {
     name: string;
     email: string;
-    phone: string;
+    phone?: string;
+}
+
+export interface SignupVerifyRequest {
+    name: string;
+    email: string;
+    phone?: string;
+    otp: string;
 }
 
 export interface ResendOtpRequest {
-    email: string;
+    identifier: string;
 }
+
+export type OtpVerifyRequest = LoginVerifyRequest | SignupVerifyRequest;

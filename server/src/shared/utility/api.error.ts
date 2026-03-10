@@ -1,5 +1,4 @@
-import { StatusCodes } from "../constants/http.status.enums";
-
+import{ StatusCodes } from "../constants/http.status.enums";
 
 class ApiError extends Error {
     statusCode: StatusCodes;
