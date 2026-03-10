@@ -1,10 +1,10 @@
-import { IUserService } from "../user/interface/user.services.interface";
+import { IUserRepo } from "../user/interface/user.repository.interface";
 import { IAuthService } from "./interface/auth.service.interface";
 
 
 export class AuthService implements IAuthService {
     constructor(
-        private _userService : IUserService
+        private _userRepo : IUserRepo
     ){}
 
 
