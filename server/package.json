@@ -4,8 +4,7 @@
   "description": "",
   "license": "ISC",
   "author": "",
-  "type": "module",
-  "main": "index.js",
+  "main": "dist/app.js",
   "scripts": {
     "dev": "nodemon --exec tsx src/app.ts",
     "build": "tsc",
