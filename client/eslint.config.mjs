@@ -6,6 +6,18 @@ const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   // Override default ignores of eslint-config-next.
+  {
+    // Define the files these rules apply to
+    files: ["**/*.{ts,tsx}"],
+    plugins: {
+      "@typescript-eslint": tseslint,
+    },
+    rules: {
+      "@typescript-eslint/no-explicit-any":"off",
+      "@typescript-eslint/no-unsafe-assignment": "warn",
+      "@typescript-eslint/no-unsafe-call": "warn",
+    },
+  },
   globalIgnores([
     // Default ignores of eslint-config-next:
     ".next/**",
