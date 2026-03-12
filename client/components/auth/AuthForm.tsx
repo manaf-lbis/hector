@@ -11,9 +11,12 @@ import OTPForm from './OTPForm';
 import {
   useInitiateLoginMutation,
   useInitiateSignupMutation,
-  useResendOtpMutation,
-  useVerifyOtpMutation,
+  useResendSignupOtpMutation,
+  useResendLoginOtpMutation,
+  useVerifyLoginOtpMutation,
+  useVerifySignupOtpMutation,
 } from '@/store/api/auth.api';
+
 import { loginSuccess } from '@/store/slices/auth.slice';
 import { useDispatch } from 'react-redux';
 
@@ -38,10 +41,15 @@ export default function AuthForm({ type }: { type: AuthType }) {
     otp: '',
   });
 
-  const [initiateLogin, { isLoading: isInitiatingLogin }] = useInitiateLoginMutation();
+  // ── Signup hooks ──
   const [initiateSignup, { isLoading: isInitiatingSignup }] = useInitiateSignupMutation();
-  const [verifyOtp, { isLoading: isVerifying }] = useVerifyOtpMutation();
-  const [resendOtp, { isLoading: isResending }] = useResendOtpMutation();
+  const [verifySignupOtp, { isLoading: isVerifyingSignup }] = useVerifySignupOtpMutation();
+  const [resendSignupOtp, { isLoading: isResendingSignup }] = useResendSignupOtpMutation();
+
+  // ── Login hooks ──
+  const [initiateLogin, { isLoading: isInitiatingLogin }] = useInitiateLoginMutation();
+  const [verifyLoginOtp, { isLoading: isVerifyingLogin }] = useVerifyLoginOtpMutation();
+  const [resendLoginOtp, { isLoading: isResendingLogin }] = useResendLoginOtpMutation();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -54,56 +62,58 @@ export default function AuthForm({ type }: { type: AuthType }) {
 
     try {
       if (isSignup) {
-        await initiateSignup({
+        const res = await initiateSignup({
           name: formData.fullName.trim(),
           email: formData.email.trim(),
           phone: formData.phone.trim(),
         }).unwrap();
-        setOtpChannel(formData.email || formData.phone || 'your contact');
+
+        setOtpChannel(`${formData.email} / ${formData.phone}`);
       } else {
-        await initiateLogin({
+        const res = await initiateLogin({
           identifier: formData.identifier.trim(),
         }).unwrap();
+
         setOtpChannel(formData.identifier);
       }
       setStep(2);
     } catch (err: any) {
-      setApiError(err?.data?.message || 'Failed to send OTP. Please try again.');
+      setApiError(err?.data?.message || 'Failed to request code. Try again.');
     }
   };
 
   const handleVerify = async () => {
     if (formData.otp.length !== 6 || !/^\d{6}$/.test(formData.otp)) {
-      setApiError('Please enter a valid 6-digit code');
+      setApiError('Enter a valid 6-digit code');
       return;
     }
 
     setApiError('');
 
     try {
-      let payload: any;
+      let response;
 
       if (isSignup) {
-        payload = {
+        response = await verifySignupOtp({
           name: formData.fullName.trim(),
           email: formData.email.trim(),
           phone: formData.phone.trim(),
           otp: formData.otp.trim(),
-        };
+        }).unwrap();
       } else {
-        payload = {
+        response = await verifyLoginOtp({
           identifier: formData.identifier.trim(),
           otp: formData.otp.trim(),
-        };
+        }).unwrap();
       }
 
-      const response = await verifyOtp(payload).unwrap();
+      // Assuming backend returns { user, ... } or just user
       const user = response.user ?? response;
 
       dispatch(loginSuccess(user));
       router.replace('/');
     } catch (err: any) {
-      setApiError(err?.data?.message || 'Invalid or expired OTP');
+      setApiError(err?.data?.message || 'Invalid or expired code');
     }
   };
 
@@ -111,14 +121,24 @@ export default function AuthForm({ type }: { type: AuthType }) {
     setApiError('');
 
     try {
-      const target = isSignup ? formData.email.trim() : formData.identifier.trim();
-      await resendOtp({ identifier: target }).unwrap();
+      if (isSignup) {
+        await resendSignupOtp({
+          email: formData.email.trim(),
+          phone: formData.phone.trim(),
+        }).unwrap();
+      } else {
+        await resendLoginOtp({
+          identifier: formData.identifier.trim(),
+        }).unwrap();
+      }
     } catch (err: any) {
       setApiError(err?.data?.message || 'Failed to resend code');
     }
   };
 
   const isLoadingStep1 = isInitiatingLogin || isInitiatingSignup;
+  const isVerifying = isVerifyingSignup || isVerifyingLogin;
+  const isResending = isResendingSignup || isResendingLogin;
 
   return (
     <Box sx={{ width: { xs: '90vw', sm: 420 }, mx: 'auto', p: 4, position: 'relative' }}>
@@ -134,8 +154,8 @@ export default function AuthForm({ type }: { type: AuthType }) {
         {step === 2
           ? `Code sent to ${otpChannel}`
           : isSignup
-          ? 'Join in less than a minute'
-          : 'Use your email or phone number'}
+            ? 'Join in less than a minute'
+            : 'Use your email or phone number'}
       </Typography>
 
       {apiError && (

@@ -1,11 +1,24 @@
 import { Document, Types } from "mongoose";
 
+export enum Roles {
+    user = 'user',
+    admin = 'admin'
+} 
+
+export enum UserStatus {
+    active = 'active',
+    blocked = 'blocked'
+}
+
 export interface IUser extends Document {
     _id: Types.ObjectId;
     name: string;
     email: string;
+    phone :string;
+    role : Roles;
+    status: UserStatus;
     refreshToken?: string;
-    kyc:Types.ObjectId
+    kyc:Types.ObjectId;
     createdAt?: Date;
     updatedAt?: Date;
 }

@@ -4,7 +4,7 @@ import authRoute from '../../features/auth/auth.route'
 
 const route = Router()
 
-route.use('/auth', authRoute)
+route.use('/auth',authRoute)
 
 
 

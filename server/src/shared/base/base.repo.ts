@@ -1,4 +1,4 @@
-import { Model, Document, Types } from "mongoose";
+import { Model, Document, Types, QueryFilter } from "mongoose";
 import { IBaseRepository } from "./interface/base.repository.interface";
 
 
@@ -30,8 +30,34 @@ export class BaseRepository<T extends Document> implements IBaseRepository<T> {
     return await this._model.findByIdAndUpdate(id, item, { new: true }).exec();
   }
 
+  async upsert(query: QueryFilter<T>, data: Partial<T>): Promise<T> {
+    return await this._model.findOneAndUpdate(
+      query,
+      data,
+      {
+        upsert: true,
+        returnDocument: "after",
+        setDefaultsOnInsert: true
+      }
+    );
+  }
+
   async delete(id: Types.ObjectId): Promise<T | null> {
     return await this._model.findByIdAndDelete(id).exec();
   }
-  
+
+  async findOne(query: QueryFilter<T>): Promise<T | null> {
+    return await this._model.findOne(query as any).exec();
+  }
+
+  async findOneAndUpdate(query: QueryFilter<T>, data: Partial<T>): Promise<T | null> {
+    return await this._model.findOneAndUpdate(
+      query,
+      data,
+      { returnDocument: "after" }
+    ).exec();
+  }
+
+
+
 }

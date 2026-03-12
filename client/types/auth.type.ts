@@ -20,7 +20,12 @@ export interface SignupVerifyRequest {
     otp: string;
 }
 
-export interface ResendOtpRequest {
+export interface SignupOtpRequest {
+    email: string;
+    phone: string;
+}
+
+export interface LoginOtpRequest {
     identifier: string;
 }
 

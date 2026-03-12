@@ -2,6 +2,8 @@ import ApiError from "../utility/api.error";
 
 export const errorHandler = (err: any, req: any, res: any, next: any) => {
 
+
+    console.error(err.message);
       console.error(err.stack); 
 
         if (err instanceof ApiError) {

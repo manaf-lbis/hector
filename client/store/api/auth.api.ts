@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { baseQuery } from './baseApi/base.api';
-import type { LoginInitiateRequest, OtpVerifyRequest, ResendOtpRequest, SignupInitiateRequest } from '@/types/auth.type';
+import type { LoginInitiateRequest, LoginOtpRequest, OtpVerifyRequest, SignupInitiateRequest, SignupOtpRequest } from '@/types/auth.type';
 
 export const authApi = createApi({
     reducerPath: 'authApi',
@@ -21,16 +21,30 @@ export const authApi = createApi({
                 body,
             }),
         }),
-        verifyOtp: builder.mutation<any, OtpVerifyRequest>({
+        verifySignupOtp: builder.mutation<any, OtpVerifyRequest>({
             query: (body) => ({
-                url: '/auth/verify',
+                url: '/auth/signup/verify-otp',
                 method: 'POST',
                 body,
             }),
         }),
-        resendOtp: builder.mutation<any, ResendOtpRequest>({
+        verifyLoginOtp: builder.mutation<any, OtpVerifyRequest>({
             query: (body) => ({
-                url: '/auth/resend-otp',
+                url: '/auth/login/verify-otp',
+                method: 'POST',
+                body,
+            }),
+        }),
+        resendSignupOtp: builder.mutation<any, SignupOtpRequest>({
+            query: (body) => ({
+                url: '/auth/signup/resend-otp',
+                method: 'POST',
+                body,
+            }),
+        }),
+        resendLoginOtp: builder.mutation<any, LoginOtpRequest>({
+            query: (body) => ({
+                url: '/auth/login/resend-otp',
                 method: 'POST',
                 body,
             }),
@@ -39,8 +53,10 @@ export const authApi = createApi({
 });
 
 export const {
-    useVerifyOtpMutation,
-    useResendOtpMutation,
     useInitiateLoginMutation,
-    useInitiateSignupMutation
+    useInitiateSignupMutation,
+    useVerifyLoginOtpMutation,
+    useVerifySignupOtpMutation,
+    useResendSignupOtpMutation,
+    useResendLoginOtpMutation,
 } = authApi;

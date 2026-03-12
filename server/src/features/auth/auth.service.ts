@@ -1,11 +1,99 @@
-import { IUserRepo } from "../user/interface/user.repository.interface";
+import { Types } from "mongoose";
+import ApiError from "../../shared/utility/api.error";
+import { generateAuthToken, generateTokens } from "../../shared/utility/token.utility";
+import { IOtpService } from "../otp/interface/otp.service.interface";
+import { IUserService } from "../user/interface/user.services.interface";
+import { Roles } from "../user/types";
 import { IAuthService } from "./interface/auth.service.interface";
 
-
 export class AuthService implements IAuthService {
+    private readonly _OTP_RESEND_SEC = Number(process.env.OTP_RESEND_SEC)
     constructor(
-        private _userRepo : IUserRepo
-    ){}
+        private _userService: IUserService,
+        private _otpService: IOtpService
+    ) { }
+
+
+    async login(identifier: string): Promise<{ authToken: string; }> {
+
+        console.log(identifier);
+        
+        const user = await this._userService.findByIdentifier({ identifier });
+        if (!user) throw new ApiError('user not found');
+        if (user.status !== 'active') throw new ApiError('user is not Blocked')
+
+        const result = await this._otpService.generateLoginOtp(user.email);
+
+        const authToken = generateAuthToken({ otpId: result.otpId, email: user.email });
+
+        return {
+            authToken,
+        }
+    }
+
+    async signup({ name, email, phone }: { name: string; email: string; phone: string; }): Promise<{ authToken: string, resendOtpInSeconds: number; }> {
+
+        const user = await this._userService.checkUserExists({ email, phone })
+
+        if (user) {
+            if (user.email === email) throw new ApiError('user already exists with email please Login')
+            if (user.phone === phone) throw new ApiError('user already exists with phone please Login')
+        }
+
+        const otpData = await this._otpService.generateSignupOtp(email)
+        const authToken = generateAuthToken({ name, email, phone, otpId: otpData._id })
+
+        return { authToken, resendOtpInSeconds: this._OTP_RESEND_SEC }
+    }
+
+    async verifySignup({ otp, name, email, phone, otpId }: { otp: string; name: string; email: string; phone: string; otpId: Types.ObjectId; }): Promise<{ accessToken: string; refreshToken: string; role: Roles }> {
+
+        await this._otpService.validateOtp({ otpId, submittedOtp: otp });
+        const user = await this._userService.createUser({ name, email, phone, role: Roles.user });
+
+        const tokens = generateTokens({ userId: user._id, role: user.role });
+
+        await this._userService.updateUserToken({ userId: user._id, refreshToken: tokens.refreshToken });
+
+        return {
+            accessToken: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
+            role: user.role
+        }
+    }
+
+    async verifyLogin({ otp, email, otpId }: { otp: string; email: string; otpId: Types.ObjectId; }): Promise<{ accessToken: string; role: Roles, refreshToken: string }> {
+
+        await this._otpService.validateOtp({ otpId, submittedOtp: otp });
+        console.log(email);
+        
+        const user = await this._userService.findByIdentifier({ identifier: email });
+
+        if (!user) throw new ApiError('user not found')
+
+        const tokens = generateTokens({ userId: user._id, role: user.role });
+        await this._userService.updateUserToken({ userId: user._id, refreshToken: tokens.refreshToken });
+
+
+        return {
+            accessToken: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
+            role: user.role
+        }
+
+    }
+
+    async loginResend({ email, otpId }: { email: string; otpId: Types.ObjectId; }): Promise<void> {
+
+        await this._otpService.reGenerateOtp({ email, otpId });
+
+    }
+
+    async signupResend({ email, otpId }: { email: string; otpId: Types.ObjectId; }): Promise<void> {
+
+        await this._otpService.reGenerateOtp({ email, otpId });
+    }
+
 
 
 
