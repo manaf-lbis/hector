@@ -3,8 +3,8 @@ import { IAuthService } from "./interface/auth.service.interface";
 import { validateEmail, validateEmailOrPhone, validateFullName, validateOTP, validatePhone } from "../../shared/utility/validators/auth.validator";
 import ApiError from "../../shared/utility/api.error";
 import { sendSuccess } from "../../shared/utility/api.success";
-import { verifyAuthToken, verifyToken } from "../../shared/utility/token.utility";
-import { Roles } from "../user/types";
+import { verifyAuthToken } from "../../shared/utility/token.utility";
+
 
 export class AuthController {
     constructor(
