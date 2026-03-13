@@ -1,0 +1,21 @@
+import { Router } from "express";
+import { KycRepository } from "./kyc.repo";
+import { KycService } from "./kyc.service";
+import { KycController } from "./kyc.controller";
+import { authMiddleware, roleMiddleware } from "../../shared/middleware/auth.middleware";
+import { Roles } from "../user/types";
+
+const router = Router();
+
+const kycRepo = new KycRepository();
+const kycService = new KycService(kycRepo);
+const kycController = new KycController(kycService);
+
+router.post('/submit', authMiddleware, kycController.submitKyc.bind(kycController));
+router.get('/status', authMiddleware, kycController.getKycStatus.bind(kycController));
+
+// Admin routes
+router.get('/pending', authMiddleware, roleMiddleware([Roles.admin]), kycController.getPendingKyc.bind(kycController));
+router.post('/review', authMiddleware, roleMiddleware([Roles.admin]), kycController.reviewKyc.bind(kycController));
+
+export default router;

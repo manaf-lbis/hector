@@ -15,7 +15,7 @@ export class AuthController {
         res.cookie('accesstoken', accessToken,
             { maxAge: Number(process.env.JWT_ACCESS_EXPIRATION_MIN) * 60 * 1000 }
         );
-        res.cookie('refresh', accessToken,
+        res.cookie('refresh', refreshToken,
             { maxAge: Number(process.env.JWT_REFRESH_EXPIRATION_DAY) * 24 * 60 * 60 * 1000 }
         );
     }
@@ -28,6 +28,7 @@ export class AuthController {
 
     async login(req: Request, res: Response, next: NextFunction) {
         try {
+
             const { identifier } = req.body
             validateEmailOrPhone(identifier)
 
@@ -126,9 +127,9 @@ export class AuthController {
             const payload = verifyAuthToken(token);
             if (!payload) throw new ApiError('Session invalid Try again');
 
-            const res = await this._authService.loginResend({ email: payload.email!, otpId: payload.otpId! });
+            const result = await this._authService.loginResend({ email: payload.email!, otpId: payload.otpId! });
 
-            sendSuccess(res, { email: payload.email}, 'OTP sented successfully')
+            sendSuccess(res, result.resendOtpInSeconds, 'OTP sented successfully')
 
         } catch (error) {
             next(error)
@@ -141,10 +142,52 @@ export class AuthController {
             const tokenPayload = verifyAuthToken(token);
             if (!tokenPayload) throw new ApiError('Session invalid Try again');
 
-            await this._authService.signupResend({ email: tokenPayload.email!, otpId: tokenPayload.otpId });
+            const result = await this._authService.signupResend({ email: tokenPayload.email!, otpId: tokenPayload.otpId });
+
+            sendSuccess(res, result.resendOtpInSeconds, 'OTP sented successfully')
 
         } catch (error) {
             next(error)
         }
     }
-} 
+
+    async refreshToken(req: Request, res: Response, next: NextFunction) {
+        try {
+            const token = req.cookies?.refresh;
+            if (!token) throw new ApiError('No refresh token provided', 401);
+
+            const result = await this._authService.refreshToken(token);
+
+            await this._setTokens({ res, accessToken: result.accessToken, refreshToken: result.refreshToken });
+            sendSuccess(res, { role: result.role }, 'Token refreshed successfully');
+
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    async logout(req: Request, res: Response, next: NextFunction) {
+        try {
+            const user = req.user;
+            await this._authService.logout(user.userId);
+
+            res.clearCookie('accesstoken');
+            res.clearCookie('refresh');
+
+            sendSuccess(res, null, 'Logout successful');
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    async getMe(req: Request, res: Response, next: NextFunction) {
+        try {
+            const userPayload = req.user;
+            const user = await this._authService.getMe(userPayload.userId);
+
+            sendSuccess(res, user, 'User data fetched successfully');
+        } catch (error) {
+            next(error)
+        }
+    }
+}

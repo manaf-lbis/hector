@@ -1,6 +1,6 @@
 import { Types } from "mongoose";
 import ApiError from "../../shared/utility/api.error";
-import { generateAuthToken, generateTokens } from "../../shared/utility/token.utility";
+import { generateAuthToken, generateTokens, verifyRefreshToken } from "../../shared/utility/token.utility";
 import { IOtpService } from "../otp/interface/otp.service.interface";
 import { IUserService } from "../user/interface/user.services.interface";
 import { Roles } from "../user/types";
@@ -17,7 +17,7 @@ export class AuthService implements IAuthService {
     async login(identifier: string): Promise<{ authToken: string; }> {
 
         console.log(identifier);
-        
+
         const user = await this._userService.findByIdentifier({ identifier });
         if (!user) throw new ApiError('user not found');
         if (user.status !== 'active') throw new ApiError('user is not Blocked')
@@ -66,7 +66,7 @@ export class AuthService implements IAuthService {
 
         await this._otpService.validateOtp({ otpId, submittedOtp: otp });
         console.log(email);
-        
+
         const user = await this._userService.findByIdentifier({ identifier: email });
 
         if (!user) throw new ApiError('user not found')
@@ -83,21 +83,46 @@ export class AuthService implements IAuthService {
 
     }
 
-    async loginResend({ email, otpId }: { email: string; otpId: Types.ObjectId; }): Promise<void> {
-
-        await this._otpService.reGenerateOtp({ email, otpId });
-
+    async loginResend({ email, otpId }: { email: string; otpId: Types.ObjectId; }): Promise<{ resendOtpInSeconds: number; }> {
+        return await this._otpService.reGenerateOtp({ email, otpId });
     }
 
-    async signupResend({ email, otpId }: { email: string; otpId: Types.ObjectId; }): Promise<void> {
-
-        await this._otpService.reGenerateOtp({ email, otpId });
+    async signupResend({ email, otpId }: { email: string; otpId: Types.ObjectId; }): Promise<{ resendOtpInSeconds: number; }> {
+        return await this._otpService.reGenerateOtp({ email, otpId });
     }
 
+    async refreshToken(token: string): Promise<{ accessToken: string, refreshToken: string, role: string }> {
+        const payload = verifyRefreshToken(token);
+        if (!payload) throw new ApiError('Invalid or expired refresh token', 401);
 
+        const user = await this._userService.getActiveUserById({ userId: payload.userId });
+        if (!user || user.refreshToken !== token) {
+            throw new ApiError('Invalid refresh token', 401);
+        }
 
+        const tokens = generateTokens({ userId: user._id, role: user.role });
+        await this._userService.updateUserToken({ userId: user._id, refreshToken: tokens.refreshToken });
 
+        return {
+            accessToken: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
+            role: user.role
+        };
+    }
 
+    async logout(userId: Types.ObjectId): Promise<void> {
+        await this._userService.updateUserToken({ userId, refreshToken: "" });
+    }
 
+    async getMe(userId: Types.ObjectId): Promise<{ name: string, email: string, phone: string, role: Roles }> {
+        const user = await this._userService.getActiveUserById({ userId });
+        if (!user) throw new ApiError('User not found', 404);
 
+        return {
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            role: user.role as Roles
+        };
+    }
 }

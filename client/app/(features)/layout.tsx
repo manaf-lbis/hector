@@ -4,6 +4,7 @@ import ThemeRegistry from '../ThemeRegistry';
 import { Provider } from 'react-redux';
 import store from '@/store';
 import StoreProvider from '../StoreProvider';
+import AuthProvider from '@/components/providers/AuthProvider';
 
 const roboto = Roboto({
   weight: ['300', '400', '500', '700'],
@@ -20,8 +21,10 @@ export default function RootLayout({ children, modal }: { children: React.ReactN
         <AppRouterCacheProvider>
           <ThemeRegistry>
             <StoreProvider>
-              {children}
-              {modal}
+              <AuthProvider>
+                {children}
+                {modal}
+              </AuthProvider>
             </StoreProvider>
           </ThemeRegistry>
         </AppRouterCacheProvider>

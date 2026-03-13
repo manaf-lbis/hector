@@ -51,6 +51,17 @@ export const generateAuthToken = (payload: AuthTokenPayload): string => {
     });
 };
 
+export const verifyRefreshToken = (token: string): TokenPayload | null => {
+    try {
+        const key = process.env.JWT_REFRESH_SECRET;
+        if (!key) throw new ApiError("Token validation failed", 500);
+
+        return jwt.verify(token, key) as TokenPayload;
+    } catch (err) {
+        return null;
+    }
+}
+
 export const verifyAuthToken = (token: string): AuthTokenPayload | null => {
     try {
         const key = process.env.JWT_ACCESS_SECRET;

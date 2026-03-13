@@ -28,7 +28,6 @@ const ButtonWithIcon = ({
     onClick
 }: Props) => {
 
-    // 1. Theme strictly controls Backgrounds and Icons
     const themeMap = {
         primary: { bg: BRAND.primary[600], iconBg: BRAND.primary[400], iconColor: BRAND.white },
         secondary: { bg: BRAND.secondary[500], iconBg: BRAND.primary[600], iconColor: BRAND.secondary[500] },
@@ -45,10 +44,10 @@ const ButtonWithIcon = ({
     };
 
     const theme = themeMap[color] || themeMap.primary;
-    
+
     // If textColor prop is passed, use it; otherwise fallback to a sensible default (like white for contained, or black/primary for others)
-    const finalTextColor = textColor 
-        ? textMap[textColor] 
+    const finalTextColor = textColor
+        ? textMap[textColor]
         : (variant === 'contained' ? BRAND.white : textMap[color]);
 
     const config = {
@@ -67,11 +66,11 @@ const ButtonWithIcon = ({
             disableElevation
             sx={{
                 height: typeof size === 'object' ? { xs: getStyles(size.xs).height, md: getStyles(size.md).height, lg: getStyles(size.lg || 'lg').height } : getStyles(size).height,
-                
+
                 // Now strictly controlled by the independent textColor logic
                 color: `${finalTextColor} !important`,
                 backgroundColor: variant === 'contained' ? `${theme.bg} !important` : "transparent !important",
-                
+
                 ...(variant === 'outlined' ? {
                     background: alpha(theme.bg, 0.05),
                     backdropFilter: "blur(8px)",

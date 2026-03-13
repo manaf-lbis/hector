@@ -50,10 +50,10 @@ export const glass = {
 
     // Secondary glass — modals, drawers, dialogs
     secondary: {
-        background: alpha(BRAND.white, 0.8),
-        backdropFilter: "blur(32px) saturate(200%)",
-        WebkitBackdropFilter: "blur(32px) saturate(200%)",
-        border: `1px solid ${alpha(BRAND.white, 0.9)}`,
+        background: alpha(BRAND.white, 0.75),
+        backdropFilter: "blur(24px) saturate(200%)",
+        WebkitBackdropFilter: "blur(24px) saturate(200%)",
+        border: `1px solid ${alpha(BRAND.white, 1)}`,
         boxShadow: `0 24px 80px ${alpha(BRAND.inkDark, 0.12)}, inset 0 1px 0 ${alpha(BRAND.white, 1)}`,
     },
 
@@ -392,8 +392,8 @@ export const theme = createTheme({
                 paper: { ...glass.secondary, borderRadius:12 },
                 root: {
                     "& .MuiBackdrop-root": {
-                        backdropFilter: "blur(8px)",
-                        backgroundColor: alpha(BRAND.inkDark, 0.3),
+                        backdropFilter: "blur(4px)",
+                        backgroundColor: alpha(BRAND.inkDark, 0.2),
                     },
                 },
             },
@@ -417,7 +417,22 @@ export const theme = createTheme({
                 paper: {
                     ...glass.secondary,
                     border: "none",
-                    borderRight: `1px solid ${alpha(BRAND.primary[600], 0.1)}`,
+                },
+                root: {
+                    "& .MuiBackdrop-root": {
+                        backgroundColor: "transparent",
+                        backdropFilter: "none",
+                    }
+                }
+            },
+        },
+        
+        // ── BACKDROP ────────────────────────────────────────────────────────────
+        MuiBackdrop: {
+            styleOverrides: {
+                root: {
+                    backgroundColor: alpha(BRAND.inkDark, 0.1),
+                    backdropFilter: "blur(4px)",
                 },
             },
         },

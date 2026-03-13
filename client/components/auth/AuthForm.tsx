@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Box, Typography, IconButton, Alert } from '@mui/material';
+import { Box, Typography, IconButton, Alert, useTheme } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { useRouter } from 'next/navigation';
 
 import UserIdentifierForm from './UserIdentifierForm';
 import OTPForm from './OTPForm';
+import Logo from '../ui/Logo';
 
 import {
   useInitiateLoginMutation,
@@ -22,9 +23,15 @@ import { useDispatch } from 'react-redux';
 
 type AuthType = 'login' | 'signup';
 
-export default function AuthForm({ type }: { type: AuthType }) {
+interface AuthFormProps {
+  type: AuthType;
+  isModal?: boolean;
+}
+
+export default function AuthForm({ type, isModal = false }: AuthFormProps) {
   const dispatch = useDispatch();
   const router = useRouter();
+  const theme = useTheme();
 
   const isSignup = type === 'signup';
 
@@ -62,7 +69,7 @@ export default function AuthForm({ type }: { type: AuthType }) {
 
     try {
       if (isSignup) {
-        const res = await initiateSignup({
+        await initiateSignup({
           name: formData.fullName.trim(),
           email: formData.email.trim(),
           phone: formData.phone.trim(),
@@ -70,7 +77,7 @@ export default function AuthForm({ type }: { type: AuthType }) {
 
         setOtpChannel(`${formData.email} / ${formData.phone}`);
       } else {
-        const res = await initiateLogin({
+        await initiateLogin({
           identifier: formData.identifier.trim(),
         }).unwrap();
 
@@ -107,11 +114,21 @@ export default function AuthForm({ type }: { type: AuthType }) {
         }).unwrap();
       }
 
-      // Assuming backend returns { user, ... } or just user
-      const user = response.user ?? response;
+      // Prioritize .data from the response, falling back to .user or the whole response
+      const user = response.data ?? response.user ?? response;
 
       dispatch(loginSuccess(user));
-      router.replace('/');
+
+      // Role-based redirect logic
+      if (user.role === 'admin') {
+        // Use window.location.href for admin to force a full refresh.
+        // This is the most reliable way to clear "sticky" parallel route modals in Next.js.
+        window.location.href = '/admin';
+      } else if (isModal) {
+        router.back();
+      } else {
+        router.push('/');
+      }
     } catch (err: any) {
       setApiError(err?.data?.message || 'Invalid or expired code');
     }
@@ -141,25 +158,31 @@ export default function AuthForm({ type }: { type: AuthType }) {
   const isResending = isResendingSignup || isResendingLogin;
 
   return (
-    <Box sx={{ width: { xs: '90vw', sm: 420 }, mx: 'auto', p: 4, position: 'relative' }}>
-      <IconButton onClick={() => router.back()} sx={{ position: 'absolute', top: 8, right: 8 }}>
-        <CloseIcon />
-      </IconButton>
+    <Box sx={{ width: '100%', maxWidth: 420, minWidth: { sm: 400 }, minHeight: 400, mx: 'auto', p: isModal ? 4 : { xs: 2, sm: 4 }, position: 'relative' }}>
+      {isModal && (
+        <IconButton onClick={() => router.back()} sx={{ position: 'absolute', top: 8, right: 8 }}>
+          <CloseIcon />
+        </IconButton>
+      )}
 
-      <Typography variant="h5" fontWeight={700} align="center" gutterBottom>
-        {isSignup ? 'Create Account' : 'Sign In'}
+      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+        <Logo navigateTo="/" />
+      </Box>
+
+      <Typography variant="h5" fontWeight={800} align="center" gutterBottom sx={{ color: 'text.primary' }}>
+        {isSignup ? 'Create your account!' : 'Login to your account!'}
       </Typography>
 
       <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 4 }}>
         {step === 2
           ? `Code sent to ${otpChannel}`
           : isSignup
-            ? 'Join in less than a minute'
-            : 'Use your email or phone number'}
+            ? 'Join in less than a minute. Enter your details below.'
+            : 'Enter your registered email address or phone number to login!'}
       </Typography>
 
       {apiError && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setApiError('')}>
+        <Alert severity="error" sx={{ mb: 3, borderRadius: '8px' }} onClose={() => setApiError('')}>
           {apiError}
         </Alert>
       )}
