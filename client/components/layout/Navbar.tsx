@@ -40,14 +40,11 @@ const Navbar = () => {
 
     const [isTriggeringModal, setIsTriggeringModal] = useState(false);
 
-    // Handle auth trigger from query params (for modal)
-    // Stage 1: Detect param and clear it
     useEffect(() => {
         const authTrigger = searchParams.get('auth');
         if (authTrigger === 'login') {
             setIsTriggeringModal(true);
-            
-            // Clean the URL immediately without adding to history
+
             const params = new URLSearchParams(searchParams.toString());
             params.delete('auth');
             const newPath = params.toString() ? `/?${params.toString()}` : '/';
@@ -55,11 +52,9 @@ const Navbar = () => {
         }
     }, [searchParams, router]);
 
-    // Stage 2: Trigger the modal once URL is clean
     useEffect(() => {
         if (isTriggeringModal && !searchParams.get('auth')) {
             setIsTriggeringModal(false);
-            // Now that the back button is "safe", open the modal
             router.push('/auth/login');
         }
     }, [isTriggeringModal, searchParams, router]);
@@ -132,18 +127,16 @@ const Navbar = () => {
                 >
                     <Logo navigateTo="/" />
 
-                    {/* Desktop Navigation */}
                     <NavLinks navLinks={navLinks} showIcons={false} />
 
                     <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                        {/* Desktop Auth Section */}
                         <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 2 }}>
                             {isAuthenticated ? (
                                 <>
                                     <Box onClick={toggleDesktopDrawer(true)} sx={{ cursor: 'pointer' }}>
                                         <UserProfile user={user} />
                                     </Box>
-                                    <AppDrawer 
+                                    <AppDrawer
                                         open={desktopDrawerOpen}
                                         onClose={toggleDesktopDrawer(false)}
                                         user={user}
@@ -177,7 +170,7 @@ const Navbar = () => {
                         </Box>
 
                         {/* Unified Mobile Navigation */}
-                        <MobileNav 
+                        <MobileNav
                             isAuthenticated={isAuthenticated}
                             user={user}
                             navLinks={navLinks}

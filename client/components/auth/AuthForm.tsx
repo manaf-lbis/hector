@@ -48,12 +48,10 @@ export default function AuthForm({ type, isModal = false }: AuthFormProps) {
     otp: '',
   });
 
-  // ── Signup hooks ──
   const [initiateSignup, { isLoading: isInitiatingSignup }] = useInitiateSignupMutation();
   const [verifySignupOtp, { isLoading: isVerifyingSignup }] = useVerifySignupOtpMutation();
   const [resendSignupOtp, { isLoading: isResendingSignup }] = useResendSignupOtpMutation();
 
-  // ── Login hooks ──
   const [initiateLogin, { isLoading: isInitiatingLogin }] = useInitiateLoginMutation();
   const [verifyLoginOtp, { isLoading: isVerifyingLogin }] = useVerifyLoginOtpMutation();
   const [resendLoginOtp, { isLoading: isResendingLogin }] = useResendLoginOtpMutation();
@@ -114,15 +112,11 @@ export default function AuthForm({ type, isModal = false }: AuthFormProps) {
         }).unwrap();
       }
 
-      // Prioritize .data from the response, falling back to .user or the whole response
       const user = response.data ?? response.user ?? response;
 
       dispatch(loginSuccess(user));
 
-      // Role-based redirect logic
       if (user.role === 'admin') {
-        // Use window.location.href for admin to force a full refresh.
-        // This is the most reliable way to clear "sticky" parallel route modals in Next.js.
         window.location.href = '/admin';
       } else if (isModal) {
         router.back();

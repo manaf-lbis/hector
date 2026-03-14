@@ -5,7 +5,7 @@ import store from '@/store';
 
 export default async function KycPage() {
     const result = await store.dispatch(kycApi.endpoints.getKycConfig.initiate());
-    const config = result.data || { DOCUMENT_TYPES: [], MAJOR_BANKS: [] };
+    const config = (result.data as any)?.data || result.data || { DOCUMENT_TYPES: [], MAJOR_BANKS: [] };
 
     return <KycPageClient config={config} />;
 }

@@ -15,7 +15,6 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
     const pathname = usePathname();
     const [isMounted, setIsMounted] = useState(false);
 
-    // Initial check on mount to verify session via server
     const { data: userData, isSuccess, isError, isLoading, isFetching } = useGetMeQuery(undefined, {
         skip: !isMounted,
     });
@@ -62,19 +61,15 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
         }
     }, [isAuthenticated, user, authState, router, isMounted, isLoading, isFetching]);
 
-    // Proactive rendering control
     const shouldRender = useMemo(() => {
         if (!isMounted) return false;
         
-        // Show loading while checking session
         if (isLoading || isFetching) return false;
 
         const { isProtectedRoute, isAuthRoute } = authState;
 
-        // Block protected content if not authenticated
         if (isProtectedRoute && !isAuthenticated) return false;
         
-        // Block auth pages if already authenticated (wait for redirect)
         if (isAuthRoute && isAuthenticated) return false;
 
         return true;

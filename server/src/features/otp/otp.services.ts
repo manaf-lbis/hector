@@ -29,7 +29,6 @@ export class OtpService implements IOtpService {
         const now = new Date();
 
         if (isExist && isAfter(isExist.windowExpiresAt, now)) {
-            // Already in an active window
             const secondsSinceUpdate = differenceInSeconds(now, isExist.updatedAt);
             const resendLimit = Number(process.env.OTP_RESEND_SEC) || 60;
             const maxResend = Number(process.env.MAX_OTP_RESEND_COUNT) || 3;
@@ -45,7 +44,7 @@ export class OtpService implements IOtpService {
         }
 
         const { otpHash } = await this.generateOtpHash(email);
-        const windowDuration = 15 * 60 * 1000; // 15 minutes
+        const windowDuration = 15 * 60 * 1000;
         const codeDuration = Number(process.env.OTP_EXPIRY_SEC) * 1000;
 
         const otpData = await this._otpRepo.upsert(

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Modal, Paper, Box, Typography, IconButton, alpha } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
+import DocumentViewer from '@/components/ui/DocumentViewer';
 
 interface KycPreviewModalProps {
     open: boolean;
@@ -18,13 +19,10 @@ const KycPreviewModal: React.FC<KycPreviewModalProps> = ({ open, onClose, previe
                     </Typography>
                     <IconButton onClick={onClose} size="small"><CloseIcon /></IconButton>
                 </Box>
-                <Box sx={{ flexGrow: 1, overflow: 'auto', p: 2, bgcolor: alpha('#000', 0.05), display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 300 }}>
-                    {previewFile?.type === 'image' ? (
-                        /* eslint-disable-next-line @next/next/no-img-element */
-                        <img src={previewFile.url} alt="Preview" style={{ maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain' }} />
-                    ) : (
-                        <iframe src={previewFile?.url} width="100%" height="600px" style={{ border: 'none' }} title="PDF Preview" />
-                    )}
+                <Box sx={{ flexGrow: 1, overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 300, height: { xs: '70vh', md: '80vh' } }}>
+                    {previewFile ? (
+                        <DocumentViewer documents={[{ uri: previewFile.url, fileName: previewFile.file?.name, fileType: previewFile.type }]} />
+                    ) : null}
                 </Box>
             </Paper>
         </Modal>

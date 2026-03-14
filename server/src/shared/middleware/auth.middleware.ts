@@ -6,12 +6,17 @@ import { Roles } from "../../features/user/types";
 export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
     try {
         const token = req.cookies?.accesstoken;
+        console.log(`[AUTH_MIDDLEWARE] Request Path: ${req.path}`);
+        console.log(`[AUTH_MIDDLEWARE] Cookie present: ${!!token}`);
+        
         if (!token) {
+            console.error(`[AUTH_MIDDLEWARE] Missing accesstoken cookie. Available cookies:`, Object.keys(req.cookies || {}));
             throw new ApiError("Authentication required", 401);
         }
 
         const decoded = verifyToken(token);
         if (!decoded) {
+            console.error(`[AUTH_MIDDLEWARE] Token verification failed`);
             throw new ApiError("Invalid or expired session", 401);
         }
 

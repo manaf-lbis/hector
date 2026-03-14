@@ -1,5 +1,5 @@
 import { Stack, TextField, Button, CircularProgress } from '@mui/material';
-import { useState, useEffect } from 'react';   // ← add useEffect
+import { useState, useEffect } from 'react';
 import Timer from '../ui/Timer';
 
 import { validateOTP } from '@/utils/validators/formValidator';

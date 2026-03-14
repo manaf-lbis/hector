@@ -33,7 +33,6 @@ const MobileNav: React.FC<MobileNavProps> = ({
         setDrawerOpen(open);
     };
 
-    // Categorize Links
     const categories: NavCategory[] = [
         {
             title: 'General',

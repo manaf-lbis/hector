@@ -19,6 +19,7 @@ export const uploadToCloudinary = (
             {
                 folder,
                 type,
+                resource_type: 'auto',
             },
             (error, result) => {
                 if (error) reject(error);

@@ -1,18 +1,23 @@
 import { IKycRepository } from "./interface/kyc.repo.interface";
 import { KycModel } from "./models/kyc.model";
 import { IKyc, KycStatus } from "./types";
+import { BaseRepository } from "../../shared/base/base.repo";
 
-export class KycRepository implements IKycRepository {
+export class KycRepository extends BaseRepository<IKyc> implements IKycRepository {
+    constructor() {
+        super(KycModel);
+    }
+
     async createKyc(data: Partial<IKyc>): Promise<IKyc> {
-        return await KycModel.create(data);
+        return await this.create(data);
     }
 
     async getKycByUserId(userId: string): Promise<IKyc | null> {
-        return await KycModel.findOne({ user: userId }).exec();
+        return await this.findOne({ user: userId } as any);
     }
 
     async getKycById(id: string): Promise<IKyc | null> {
-        return await KycModel.findById(id).exec();
+        return await this.findById(id as any);
     }
 
     async updateKycStatus(id: string, status: KycStatus, approvedBy?: string): Promise<IKyc | null> {
@@ -21,15 +26,10 @@ export class KycRepository implements IKycRepository {
             updateData.approvedOn = new Date();
             updateData.approvedBy = approvedBy;
         }
-        return await KycModel.findByIdAndUpdate(
-            id,
-            updateData,
-            { new: true }
-        ).exec();
+        return await this.update(id as any, updateData);
     }
 
     async updateKycData(userId: string, data: Partial<IKyc>): Promise<IKyc | null> {
-        // If updating data, mostly it should become pending or resubmitted (handled by service)
         return await KycModel.findOneAndUpdate(
             { user: userId },
             data,

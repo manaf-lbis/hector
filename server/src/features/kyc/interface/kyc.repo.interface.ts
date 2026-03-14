@@ -1,6 +1,7 @@
 import { IKyc, KycStatus } from "../types";
+import { IBaseRepository } from "../../../shared/base/interface/base.repository.interface";
 
-export interface IKycRepository {
+export interface IKycRepository extends IBaseRepository<IKyc> {
     createKyc(data: Partial<IKyc>): Promise<IKyc>;
     getKycByUserId(userId: string): Promise<IKyc | null>;
     getKycById(id: string): Promise<IKyc | null>;

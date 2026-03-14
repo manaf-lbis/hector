@@ -23,20 +23,14 @@ export interface IKyc extends Document {
     bankName: string;
     ifsc: string;
     accountNo: string;
-
-    // Location Data
     location: string;
     state: string;
     district: string;
     taluk: string;
     pincode: string;
-
-    // File references
     idCardFront: string;
     idCardBack: string;
     bankPassbook: string;
-
-    // Metadata
     kycStatus: KycStatus;
     approvedOn?: Date;
     approvedBy?: Types.ObjectId;

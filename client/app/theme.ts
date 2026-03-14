@@ -11,12 +11,12 @@ export const BRAND = {
         850: "#031A0E",
         800: "#052614",
         700: "#0A3D26",
-        600: "#126640",  // PRIMARY — main brand green
+        600: "#126640",
         500: "#1B8A5A",
         400: "#24AA6E",
     },
     secondary: {
-        500: "#A8E63D",  // SECONDARY — highlight / CTA accent
+        500: "#A8E63D",
         400: "#BDED5A",
         300: "#D0F57D",
     },
@@ -28,18 +28,15 @@ export const BRAND = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// GLASSMORPHISM — primary (green-tinted glass) & secondary (secondary-tinted glass)
+// GLASSMORPHISM
 // ─────────────────────────────────────────────────────────────────────────────
 export const glass = {
-    // Subtle — navbars, breadcrumbs, light overlays
     subtle: {
         background: alpha(BRAND.white, 0.55),
         backdropFilter: "blur(12px) saturate(160%)",
         WebkitBackdropFilter: "blur(12px) saturate(160%)",
         border: `1px solid ${alpha(BRAND.white, 0.7)}`,
     },
-
-    // Primary glass — cards, panels, surfaces
     primary: {
         background: alpha(BRAND.white, 0.65),
         backdropFilter: "blur(20px) saturate(180%)",
@@ -47,8 +44,6 @@ export const glass = {
         border: `1px solid ${alpha(BRAND.white, 0.8)}`,
         boxShadow: `0 8px 32px ${alpha(BRAND.inkDark, 0.08)}, inset 0 1px 0 ${alpha(BRAND.white, 0.9)}`,
     },
-
-    // Secondary glass — modals, drawers, dialogs
     secondary: {
         background: alpha(BRAND.white, 0.75),
         backdropFilter: "blur(24px) saturate(200%)",
@@ -56,8 +51,6 @@ export const glass = {
         border: `1px solid ${alpha(BRAND.white, 1)}`,
         boxShadow: `0 24px 80px ${alpha(BRAND.inkDark, 0.12)}, inset 0 1px 0 ${alpha(BRAND.white, 1)}`,
     },
-
-    // secondary accent glass — badges, tags, highlights
     lime: {
         background: alpha(BRAND.secondary[500], 0.2),
         backdropFilter: "blur(8px)",
@@ -65,8 +58,6 @@ export const glass = {
         border: `1px solid ${alpha(BRAND.secondary[500], 0.4)}`,
         color: BRAND.primary[700],
     },
-
-    // Emerald glass — stat cards, feature panels
     emerald: {
         background: alpha(BRAND.primary[600], 0.08),
         backdropFilter: "blur(16px) saturate(180%)",
@@ -74,22 +65,18 @@ export const glass = {
         border: `1px solid ${alpha(BRAND.primary[500], 0.3)}`,
         boxShadow: `0 4px 20px ${alpha(BRAND.primary[600], 0.2)}`,
     },
-
     emeraldNav: {
-
-        backgroundColor: alpha(BRAND.primary[850], .82),
-
+        backgroundColor: alpha(BRAND.primary[850], 0.82),
         backdropFilter: "blur(16px)",
         WebkitBackdropFilter: "blur(16px)",
         borderBottom: `1px solid ${alpha(BRAND.white, 0.12)}`,
-    }
+    },
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// BACKGROUND — layered field/crop atmosphere
+// BACKGROUND
 // ─────────────────────────────────────────────────────────────────────────────
 export const appBackground = {
-    // Use on <body> or root layout wrapper
     background: `
     radial-gradient(ellipse 100% 60% at 20% 0%, ${alpha(BRAND.primary[400], 0.18)} 0%, transparent 55%),
     radial-gradient(ellipse 80% 50% at 80% 10%, ${alpha(BRAND.secondary[500], 0.12)} 0%, transparent 50%),
@@ -100,39 +87,128 @@ export const appBackground = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// BOX VARIANTS
+// Two usage patterns:
+//   1. sx prop  →  <Box sx={glassSx.box.glassPrimary} />
+//   2. className →  <Box className="glass-primary" />  (registered in MuiCssBaseline)
+// ─────────────────────────────────────────────────────────────────────────────
+export const BOX_VARIANTS = {
+    "glass-subtle": {
+        ...glass.subtle,
+        borderRadius: "16px",
+        transition: "box-shadow 0.25s ease, border-color 0.25s ease",
+        "&:hover": { boxShadow: `0 4px 16px ${alpha(BRAND.inkDark, 0.06)}` },
+    },
+    "glass-primary": {
+        ...glass.primary,
+        borderRadius: "20px",
+        transition: "box-shadow 0.25s ease, transform 0.25s ease",
+        "&:hover": {
+            transform: "translateY(-2px)",
+            boxShadow: `0 16px 48px ${alpha(BRAND.inkDark, 0.12)}, 0 0 0 1px ${alpha(BRAND.primary[600], 0.15)}`,
+        },
+    },
+    "glass-secondary": {
+        ...glass.secondary,
+        borderRadius: "20px",
+        transition: "box-shadow 0.3s ease",
+    },
+    "glass-emerald": {
+        ...glass.emerald,
+        borderRadius: "16px",
+        transition: "box-shadow 0.25s ease, transform 0.25s ease",
+        "&:hover": {
+            transform: "translateY(-2px)",
+            boxShadow: `0 8px 32px ${alpha(BRAND.primary[600], 0.28)}`,
+        },
+    },
+    "glass-lime": {
+        ...glass.lime,
+        borderRadius: "100px",
+        transition: "background 0.2s ease, border-color 0.2s ease",
+        "&:hover": {
+            background: alpha(BRAND.secondary[500], 0.28),
+            borderColor: alpha(BRAND.secondary[500], 0.6),
+        },
+    },
+    "glass-nav": { ...glass.emeraldNav, borderRadius: 0 },
+    "surface-raised": {
+        background: BRAND.white,
+        borderRadius: "20px",
+        border: `1px solid ${alpha(BRAND.primary[600], 0.1)}`,
+        boxShadow: `0 4px 20px ${alpha(BRAND.inkDark, 0.06)}, 0 1px 4px ${alpha(BRAND.inkDark, 0.04)}`,
+        transition: "box-shadow 0.25s ease, transform 0.25s ease",
+        "&:hover": {
+            transform: "translateY(-3px)",
+            boxShadow: `0 16px 48px ${alpha(BRAND.inkDark, 0.1)}, 0 0 0 1px ${alpha(BRAND.primary[600], 0.12)}`,
+        },
+    },
+    "surface-flat": {
+        background: alpha(BRAND.white, 0.9),
+        borderRadius: "12px",
+        border: `1px solid ${alpha(BRAND.primary[600], 0.1)}`,
+        transition: "border-color 0.2s ease, background 0.2s ease",
+        "&:hover": { background: BRAND.white, borderColor: alpha(BRAND.primary[600], 0.22) },
+    },
+    "surface-inset": {
+        background: alpha(BRAND.primary[600], 0.04),
+        borderRadius: "12px",
+        border: `1px solid ${alpha(BRAND.primary[600], 0.08)}`,
+        boxShadow: `inset 0 2px 8px ${alpha(BRAND.inkDark, 0.05)}`,
+        transition: "background 0.2s ease",
+        "&:hover": { background: alpha(BRAND.primary[600], 0.07) },
+    },
+    "gradient-primary": {
+        background: `linear-gradient(135deg, ${BRAND.primary[700]} 0%, ${BRAND.primary[600]} 50%, ${BRAND.primary[500]} 100%)`,
+        borderRadius: "20px",
+        color: BRAND.white,
+        boxShadow: `0 8px 32px ${alpha(BRAND.primary[600], 0.45)}`,
+        transition: "box-shadow 0.25s ease, transform 0.25s ease",
+        "&:hover": {
+            transform: "translateY(-2px)",
+            boxShadow: `0 16px 48px ${alpha(BRAND.primary[600], 0.55)}`,
+        },
+    },
+    "gradient-secondary": {
+        background: `linear-gradient(135deg, ${BRAND.secondary[500]} 0%, ${BRAND.secondary[400]} 100%)`,
+        borderRadius: "20px",
+        color: BRAND.primary[800],
+        boxShadow: `0 8px 32px ${alpha(BRAND.secondary[500], 0.4)}`,
+        transition: "box-shadow 0.25s ease, transform 0.25s ease",
+        "&:hover": {
+            transform: "translateY(-2px)",
+            boxShadow: `0 16px 48px ${alpha(BRAND.secondary[500], 0.5)}`,
+        },
+    },
+} as const;
+
+export type BoxVariant = keyof typeof BOX_VARIANTS;
+
+// ─────────────────────────────────────────────────────────────────────────────
 // THEME
 // ─────────────────────────────────────────────────────────────────────────────
 export const theme = createTheme({
     palette: {
         mode: "light",
-
         primary: {
             main: BRAND.primary[600],
             light: BRAND.primary[500],
             dark: BRAND.primary[700],
             contrastText: BRAND.white,
         },
-
         secondary: {
             main: BRAND.secondary[500],
             light: BRAND.secondary[400],
             dark: "#8AC82A",
             contrastText: BRAND.primary[800],
         },
-
-        background: {
-            default: BRAND.lightBg,
-            paper: BRAND.white,
-        },
-
+        background: { default: BRAND.lightBg, paper: BRAND.white },
         text: {
             primary: BRAND.inkDark,
             secondary: BRAND.muted,
             disabled: alpha(BRAND.inkDark, 0.3),
         },
-
         divider: alpha(BRAND.primary[600], 0.12),
-
         action: {
             hover: alpha(BRAND.primary[600], 0.06),
             selected: alpha(BRAND.primary[600], 0.1),
@@ -143,17 +219,16 @@ export const theme = createTheme({
 
     typography: {
         fontFamily: "var(--font-roboto)",
-        button: {
-            fontWeight: 600,
-            textTransform: "none",
-            letterSpacing: "0.01em",
-        },
+        button: { fontWeight: 600, textTransform: "none", letterSpacing: "0.01em" },
     },
 
     shape: { borderRadius: 8 },
 
     components: {
         // ── CSS BASELINE ────────────────────────────────────────────────────────
+        // Box has no MuiBox theme key in MUI v5/v6 — global CSS classes are the
+        // correct pattern. All .glass-* and .surface-* classes are registered here
+        // so <Box className="glass-primary" /> works on any element tree-wide.
         MuiCssBaseline: {
             styleOverrides: {
                 "*, *::before, *::after": { boxSizing: "border-box" },
@@ -175,6 +250,123 @@ export const theme = createTheme({
                     background: alpha(BRAND.secondary[500], 0.3),
                     color: BRAND.primary[800],
                 },
+
+                // ── Box variant classes ─────────────────────────────────────────
+                ".glass-subtle": {
+                    background: alpha(BRAND.white, 0.55),
+                    backdropFilter: "blur(12px) saturate(160%)",
+                    WebkitBackdropFilter: "blur(12px) saturate(160%)",
+                    border: `1px solid ${alpha(BRAND.white, 0.7)}`,
+                    borderRadius: "16px",
+                    transition: "box-shadow 0.25s ease",
+                    "&:hover": { boxShadow: `0 4px 16px ${alpha(BRAND.inkDark, 0.06)}` },
+                },
+                ".glass-primary": {
+                    background: alpha(BRAND.white, 0.65),
+                    backdropFilter: "blur(20px) saturate(180%)",
+                    WebkitBackdropFilter: "blur(20px) saturate(180%)",
+                    border: `1px solid ${alpha(BRAND.white, 0.8)}`,
+                    boxShadow: `0 8px 32px ${alpha(BRAND.inkDark, 0.08)}, inset 0 1px 0 ${alpha(BRAND.white, 0.9)}`,
+                    borderRadius: "20px",
+                    transition: "box-shadow 0.25s ease, transform 0.25s ease",
+                    "&:hover": {
+                        transform: "translateY(-2px)",
+                        boxShadow: `0 16px 48px ${alpha(BRAND.inkDark, 0.12)}, 0 0 0 1px ${alpha(BRAND.primary[600], 0.15)}`,
+                    },
+                },
+                ".glass-secondary": {
+                    background: alpha(BRAND.white, 0.75),
+                    backdropFilter: "blur(24px) saturate(200%)",
+                    WebkitBackdropFilter: "blur(24px) saturate(200%)",
+                    border: `1px solid ${alpha(BRAND.white, 1)}`,
+                    boxShadow: `0 24px 80px ${alpha(BRAND.inkDark, 0.12)}, inset 0 1px 0 ${alpha(BRAND.white, 1)}`,
+                    borderRadius: "20px",
+                    transition: "box-shadow 0.3s ease",
+                },
+                ".glass-emerald": {
+                    background: alpha(BRAND.primary[600], 0.08),
+                    backdropFilter: "blur(16px) saturate(180%)",
+                    WebkitBackdropFilter: "blur(16px) saturate(180%)",
+                    border: `1px solid ${alpha(BRAND.primary[500], 0.3)}`,
+                    boxShadow: `0 4px 20px ${alpha(BRAND.primary[600], 0.2)}`,
+                    borderRadius: "16px",
+                    transition: "box-shadow 0.25s ease, transform 0.25s ease",
+                    "&:hover": {
+                        transform: "translateY(-2px)",
+                        boxShadow: `0 8px 32px ${alpha(BRAND.primary[600], 0.28)}`,
+                    },
+                },
+                ".glass-lime": {
+                    background: alpha(BRAND.secondary[500], 0.2),
+                    backdropFilter: "blur(8px)",
+                    WebkitBackdropFilter: "blur(8px)",
+                    border: `1px solid ${alpha(BRAND.secondary[500], 0.4)}`,
+                    color: BRAND.primary[700],
+                    borderRadius: "100px",
+                    transition: "background 0.2s ease, border-color 0.2s ease",
+                    "&:hover": {
+                        background: alpha(BRAND.secondary[500], 0.28),
+                        borderColor: alpha(BRAND.secondary[500], 0.6),
+                    },
+                },
+                ".glass-nav": {
+                    backgroundColor: alpha(BRAND.primary[850], 0.82),
+                    backdropFilter: "blur(16px)",
+                    WebkitBackdropFilter: "blur(16px)",
+                    borderBottom: `1px solid ${alpha(BRAND.white, 0.12)}`,
+                    borderRadius: 0,
+                },
+                ".surface-raised": {
+                    background: BRAND.white,
+                    borderRadius: "20px",
+                    border: `1px solid ${alpha(BRAND.primary[600], 0.1)}`,
+                    boxShadow: `0 4px 20px ${alpha(BRAND.inkDark, 0.06)}, 0 1px 4px ${alpha(BRAND.inkDark, 0.04)}`,
+                    transition: "box-shadow 0.25s ease, transform 0.25s ease",
+                    "&:hover": {
+                        transform: "translateY(-3px)",
+                        boxShadow: `0 16px 48px ${alpha(BRAND.inkDark, 0.1)}, 0 0 0 1px ${alpha(BRAND.primary[600], 0.12)}`,
+                    },
+                },
+                ".surface-flat": {
+                    background: alpha(BRAND.white, 0.9),
+                    borderRadius: "12px",
+                    border: `1px solid ${alpha(BRAND.primary[600], 0.1)}`,
+                    transition: "border-color 0.2s ease, background 0.2s ease",
+                    "&:hover": {
+                        background: BRAND.white,
+                        borderColor: alpha(BRAND.primary[600], 0.22),
+                    },
+                },
+                ".surface-inset": {
+                    background: alpha(BRAND.primary[600], 0.04),
+                    borderRadius: "12px",
+                    border: `1px solid ${alpha(BRAND.primary[600], 0.08)}`,
+                    boxShadow: `inset 0 2px 8px ${alpha(BRAND.inkDark, 0.05)}`,
+                    transition: "background 0.2s ease",
+                    "&:hover": { background: alpha(BRAND.primary[600], 0.07) },
+                },
+                ".gradient-primary": {
+                    background: `linear-gradient(135deg, ${BRAND.primary[700]} 0%, ${BRAND.primary[600]} 50%, ${BRAND.primary[500]} 100%)`,
+                    borderRadius: "20px",
+                    color: BRAND.white,
+                    boxShadow: `0 8px 32px ${alpha(BRAND.primary[600], 0.45)}`,
+                    transition: "box-shadow 0.25s ease, transform 0.25s ease",
+                    "&:hover": {
+                        transform: "translateY(-2px)",
+                        boxShadow: `0 16px 48px ${alpha(BRAND.primary[600], 0.55)}`,
+                    },
+                },
+                ".gradient-secondary": {
+                    background: `linear-gradient(135deg, ${BRAND.secondary[500]} 0%, ${BRAND.secondary[400]} 100%)`,
+                    borderRadius: "20px",
+                    color: BRAND.primary[800],
+                    boxShadow: `0 8px 32px ${alpha(BRAND.secondary[500], 0.4)}`,
+                    transition: "box-shadow 0.25s ease, transform 0.25s ease",
+                    "&:hover": {
+                        transform: "translateY(-2px)",
+                        boxShadow: `0 16px 48px ${alpha(BRAND.secondary[500], 0.5)}`,
+                    },
+                },
             },
         },
 
@@ -182,19 +374,12 @@ export const theme = createTheme({
         MuiAppBar: {
             defaultProps: { elevation: 0 },
             styleOverrides: {
-                root: {
-                    ...glass.subtle,
-                    border: "none",
-                    borderBottom: "none",
-                    backgroundImage: "none"
-                }
-            }
+                root: { ...glass.subtle, border: "none", borderBottom: "none", backgroundImage: "none" },
+            },
         },
 
         MuiToolbar: {
-            styleOverrides: {
-                root: { minHeight: "68px !important" },
-            },
+            styleOverrides: { root: { minHeight: "68px !important" } },
         },
 
         // ── PAPER ───────────────────────────────────────────────────────────────
@@ -288,10 +473,7 @@ export const theme = createTheme({
                 root: {
                     borderRadius: 12,
                     transition: "all 0.2s ease",
-                    "&:hover": {
-                        background: alpha(BRAND.primary[600], 0.08),
-                        transform: "scale(1.05)",
-                    },
+                    "&:hover": { background: alpha(BRAND.primary[600], 0.08), transform: "scale(1.05)" },
                 },
             },
         },
@@ -300,18 +482,9 @@ export const theme = createTheme({
         MuiChip: {
             styleOverrides: {
                 root: { borderRadius: 100, fontWeight: 600, fontSize: "0.75rem" },
-                colorPrimary: {
-                    ...glass.emerald,
-                    color: BRAND.primary[600],
-                },
-                colorSecondary: {
-                    ...glass.secondary,
-                    color: BRAND.primary[700],
-                },
-                outlined: {
-                    border: `1.5px solid ${alpha(BRAND.primary[600], 0.25)}`,
-                    background: "transparent",
-                },
+                colorPrimary: { ...glass.emerald, color: BRAND.primary[600] },
+                colorSecondary: { ...glass.secondary, color: BRAND.primary[700] },
+                outlined: { border: `1.5px solid ${alpha(BRAND.primary[600], 0.25)}`, background: "transparent" },
             },
         },
 
@@ -327,47 +500,30 @@ export const theme = createTheme({
                         borderColor: alpha(BRAND.primary[800], 0.2),
                         transition: "border-color 0.3s ease",
                     },
-                    "&:hover .MuiOutlinedInput-notchedOutline": {
-                        borderColor: alpha(BRAND.primary[600], 0.4),
-                    },
-                    "&.Mui-focused": {
-                        "& .MuiOutlinedInput-notchedOutline": {
-                            borderColor: BRAND.primary[600],
-                            borderWidth: "1.5px",
-                        },
+                    "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: alpha(BRAND.primary[600], 0.4) },
+                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                        borderColor: BRAND.primary[600],
+                        borderWidth: "1.5px",
                     },
                 },
-                input: {
-                    color: BRAND.inkDark,
-                    "&::placeholder": { color: BRAND.muted, opacity: 1 },
-                },
+                input: { color: BRAND.inkDark, "&::placeholder": { color: BRAND.muted, opacity: 1 } },
             },
         },
-
 
         MuiInputLabel: {
             styleOverrides: {
                 root: {
                     color: BRAND.primary[700],
                     fontWeight: 400,
-
-                    "&.Mui-focused": {
-                        color: BRAND.primary[800],
-                        fontWeight: 600, 
-                    },
-
-                    "&.MuiInputLabel-shrink": {
-                        color: BRAND.primary[500], 
-                    },
+                    "&.Mui-focused": { color: BRAND.primary[800], fontWeight: 600 },
+                    "&.MuiInputLabel-shrink": { color: BRAND.primary[500] },
                 },
             },
         },
 
         // ── MENU ────────────────────────────────────────────────────────────────
         MuiMenu: {
-            styleOverrides: {
-                paper: { ...glass.secondary, borderRadius: 8, minWidth: 200 },
-            },
+            styleOverrides: { paper: { ...glass.secondary, borderRadius: 8, minWidth: 200 } },
         },
 
         MuiMenuItem: {
@@ -378,10 +534,7 @@ export const theme = createTheme({
                     padding: "10px 16px",
                     fontSize: "0.9rem",
                     "&:hover": { background: alpha(BRAND.primary[600], 0.08) },
-                    "&.Mui-selected": {
-                        background: alpha(BRAND.primary[600], 0.1),
-                        color: BRAND.primary[600],
-                    },
+                    "&.Mui-selected": { background: alpha(BRAND.primary[600], 0.1), color: BRAND.primary[600] },
                 },
             },
         },
@@ -389,7 +542,7 @@ export const theme = createTheme({
         // ── DIALOG ──────────────────────────────────────────────────────────────
         MuiDialog: {
             styleOverrides: {
-                paper: { ...glass.secondary, borderRadius:12 },
+                paper: { ...glass.secondary, borderRadius: 12 },
                 root: {
                     "& .MuiBackdrop-root": {
                         backdropFilter: "blur(4px)",
@@ -398,50 +551,30 @@ export const theme = createTheme({
                 },
             },
         },
-
         MuiDialogTitle: {
-            styleOverrides: {
-                root: { fontWeight: 700, fontSize: "1.25rem", padding: "24px 28px 16px" },
-            },
+            styleOverrides: { root: { fontWeight: 700, fontSize: "1.25rem", padding: "24px 28px 16px" } },
         },
-        MuiDialogContent: {
-            styleOverrides: { root: { padding: "8px 28px 20px" } },
-        },
-        MuiDialogActions: {
-            styleOverrides: { root: { padding: "12px 28px 24px", gap: 8 } },
-        },
+        MuiDialogContent: { styleOverrides: { root: { padding: "8px 28px 20px" } } },
+        MuiDialogActions: { styleOverrides: { root: { padding: "12px 28px 24px", gap: 8 } } },
 
         // ── DRAWER ──────────────────────────────────────────────────────────────
         MuiDrawer: {
             styleOverrides: {
-                paper: {
-                    ...glass.secondary,
-                    border: "none",
-                },
-                root: {
-                    "& .MuiBackdrop-root": {
-                        backgroundColor: "transparent",
-                        backdropFilter: "none",
-                    }
-                }
+                paper: { ...glass.secondary, border: "none" },
+                root: { "& .MuiBackdrop-root": { backgroundColor: "transparent", backdropFilter: "none" } },
             },
         },
-        
+
         // ── BACKDROP ────────────────────────────────────────────────────────────
         MuiBackdrop: {
             styleOverrides: {
-                root: {
-                    backgroundColor: alpha(BRAND.inkDark, 0.1),
-                    backdropFilter: "blur(4px)",
-                },
+                root: { backgroundColor: alpha(BRAND.inkDark, 0.1), backdropFilter: "blur(4px)" },
             },
         },
 
         // ── TABLE ───────────────────────────────────────────────────────────────
         MuiTableContainer: {
-            styleOverrides: {
-                root: { ...glass.primary, borderRadius: 20, overflow: "hidden" },
-            },
+            styleOverrides: { root: { ...glass.primary, borderRadius: 20, overflow: "hidden" } },
         },
         MuiTableHead: {
             styleOverrides: {
@@ -507,14 +640,7 @@ export const theme = createTheme({
         // ── TOOLTIP ─────────────────────────────────────────────────────────────
         MuiTooltip: {
             styleOverrides: {
-                tooltip: {
-                    ...glass.secondary,
-                    borderRadius: 10,
-                    fontSize: "0.8rem",
-                    fontWeight: 500,
-                    padding: "8px 14px",
-                    color: BRAND.inkDark,
-                },
+                tooltip: { ...glass.secondary, borderRadius: 10, fontSize: "0.8rem", fontWeight: 500, padding: "8px 14px", color: BRAND.inkDark },
                 arrow: { color: alpha(BRAND.white, 0.95) },
             },
         },
@@ -525,10 +651,7 @@ export const theme = createTheme({
                 badge: {
                     fontWeight: 700,
                     fontSize: "0.65rem",
-                    "&.MuiBadge-colorPrimary": {
-                        background: BRAND.secondary[500],
-                        color: BRAND.primary[800],
-                    },
+                    "&.MuiBadge-colorPrimary": { background: BRAND.secondary[500], color: BRAND.primary[800] },
                 },
             },
         },
@@ -548,15 +671,8 @@ export const theme = createTheme({
         // ── PROGRESS ────────────────────────────────────────────────────────────
         MuiLinearProgress: {
             styleOverrides: {
-                root: {
-                    borderRadius: 100,
-                    height: 6,
-                    backgroundColor: alpha(BRAND.primary[600], 0.1),
-                },
-                bar: {
-                    borderRadius: 100,
-                    background: `linear-gradient(90deg, ${BRAND.primary[600]}, ${BRAND.secondary[500]})`,
-                },
+                root: { borderRadius: 100, height: 6, backgroundColor: alpha(BRAND.primary[600], 0.1) },
+                bar: { borderRadius: 100, background: `linear-gradient(90deg, ${BRAND.primary[600]}, ${BRAND.secondary[500]})` },
             },
         },
         MuiCircularProgress: {
@@ -568,16 +684,9 @@ export const theme = createTheme({
         MuiSwitch: {
             styleOverrides: {
                 root: { padding: 4 },
-                track: {
-                    borderRadius: 100,
-                    backgroundColor: alpha(BRAND.inkDark, 0.15),
-                    opacity: 1,
-                },
+                track: { borderRadius: 100, backgroundColor: alpha(BRAND.inkDark, 0.15), opacity: 1 },
                 switchBase: {
-                    "&.Mui-checked + .MuiSwitch-track": {
-                        backgroundColor: BRAND.primary[600],
-                        opacity: 1,
-                    },
+                    "&.Mui-checked + .MuiSwitch-track": { backgroundColor: BRAND.primary[600], opacity: 1 },
                 },
             },
         },
@@ -585,18 +694,12 @@ export const theme = createTheme({
         // ── CHECKBOX / RADIO ────────────────────────────────────────────────────
         MuiCheckbox: {
             styleOverrides: {
-                root: {
-                    color: alpha(BRAND.inkDark, 0.3),
-                    "&.Mui-checked": { color: BRAND.primary[500] },
-                },
+                root: { color: alpha(BRAND.inkDark, 0.3), "&.Mui-checked": { color: BRAND.primary[500] } },
             },
         },
         MuiRadio: {
             styleOverrides: {
-                root: {
-                    color: alpha(BRAND.inkDark, 0.3),
-                    "&.Mui-checked": { color: BRAND.primary[500] },
-                },
+                root: { color: alpha(BRAND.inkDark, 0.3), "&.Mui-checked": { color: BRAND.primary[500] } },
             },
         },
 
@@ -604,10 +707,7 @@ export const theme = createTheme({
         MuiSlider: {
             styleOverrides: {
                 root: { color: BRAND.primary[500] },
-                track: {
-                    background: `linear-gradient(90deg, ${BRAND.primary[600]}, ${BRAND.secondary[500]})`,
-                    border: "none",
-                },
+                track: { background: `linear-gradient(90deg, ${BRAND.primary[600]}, ${BRAND.secondary[500]})`, border: "none" },
                 rail: { backgroundColor: alpha(BRAND.primary[600], 0.15) },
                 thumb: {
                     background: BRAND.white,
@@ -622,60 +722,33 @@ export const theme = createTheme({
         MuiAccordion: {
             defaultProps: { elevation: 0 },
             styleOverrides: {
-                root: {
-                    ...glass.primary,
-                    borderRadius: "16px !important",
-                    marginBottom: 8,
-                    "&:before": { display: "none" },
-                },
+                root: { ...glass.primary, borderRadius: "16px !important", marginBottom: 8, "&:before": { display: "none" } },
             },
         },
         MuiAccordionSummary: {
-            styleOverrides: {
-                root: { padding: "0 20px", minHeight: 56, fontWeight: 600 },
-            },
+            styleOverrides: { root: { padding: "0 20px", minHeight: 56, fontWeight: 600 } },
         },
 
         // ── ALERT ───────────────────────────────────────────────────────────────
         MuiAlert: {
             styleOverrides: {
                 root: { borderRadius: 14, backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" },
-                standardSuccess: {
-                    background: alpha(BRAND.primary[600], 0.08),
-                    border: `1px solid ${alpha(BRAND.primary[500], 0.3)}`,
-                    color: BRAND.primary[700],
-                },
-                standardWarning: {
-                    background: alpha("#F59E0B", 0.08),
-                    border: `1px solid ${alpha("#F59E0B", 0.3)}`,
-                },
-                standardError: {
-                    background: alpha("#EF4444", 0.08),
-                    border: `1px solid ${alpha("#EF4444", 0.3)}`,
-                },
-                standardInfo: {
-                    background: alpha("#3B82F6", 0.08),
-                    border: `1px solid ${alpha("#3B82F6", 0.3)}`,
-                },
+                standardSuccess: { background: alpha(BRAND.primary[600], 0.08), border: `1px solid ${alpha(BRAND.primary[500], 0.3)}`, color: BRAND.primary[700] },
+                standardWarning: { background: alpha("#F59E0B", 0.08), border: `1px solid ${alpha("#F59E0B", 0.3)}` },
+                standardError: { background: alpha("#EF4444", 0.08), border: `1px solid ${alpha("#EF4444", 0.3)}` },
+                standardInfo: { background: alpha("#3B82F6", 0.08), border: `1px solid ${alpha("#3B82F6", 0.3)}` },
             },
         },
 
         // ── MISC ────────────────────────────────────────────────────────────────
-        MuiDivider: {
-            styleOverrides: {
-                root: { borderColor: alpha(BRAND.primary[600], 0.1) },
-            },
-        },
+        MuiDivider: { styleOverrides: { root: { borderColor: alpha(BRAND.primary[600], 0.1) } } },
         MuiListItemButton: {
             styleOverrides: {
                 root: {
                     borderRadius: 12,
                     margin: "2px 0",
                     "&:hover": { background: alpha(BRAND.primary[600], 0.06) },
-                    "&.Mui-selected": {
-                        background: alpha(BRAND.primary[600], 0.1),
-                        color: BRAND.primary[600],
-                    },
+                    "&.Mui-selected": { background: alpha(BRAND.primary[600], 0.1), color: BRAND.primary[600] },
                 },
             },
         },
@@ -692,12 +765,7 @@ export const theme = createTheme({
             },
         },
         MuiSkeleton: {
-            styleOverrides: {
-                root: {
-                    borderRadius: 8,
-                    backgroundColor: alpha(BRAND.primary[600], 0.06),
-                },
-            },
+            styleOverrides: { root: { borderRadius: 8, backgroundColor: alpha(BRAND.primary[600], 0.06) } },
         },
         MuiFab: {
             styleOverrides: {
@@ -720,12 +788,28 @@ export const theme = createTheme({
 // UTILITY HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** sx() shorthand: <Box sx={glassSx.primary} /> */
+/** sx() shorthand — use directly on any MUI component */
 export const glassSx = {
+    // Raw glass tokens (no hover/transition)
     primary: glass.primary,
     secondary: glass.secondary,
     subtle: glass.subtle,
     emerald: glass.emerald,
+
+    // Full Box variants with hover + transition — <Box sx={glassSx.box.glassPrimary} />
+    box: {
+        glassSubtle: BOX_VARIANTS["glass-subtle"],
+        glassPrimary: BOX_VARIANTS["glass-primary"],
+        glassSecondary: BOX_VARIANTS["glass-secondary"],
+        glassEmerald: BOX_VARIANTS["glass-emerald"],
+        glassLime: BOX_VARIANTS["glass-lime"],
+        glassNav: BOX_VARIANTS["glass-nav"],
+        surfaceRaised: BOX_VARIANTS["surface-raised"],
+        surfaceFlat: BOX_VARIANTS["surface-flat"],
+        surfaceInset: BOX_VARIANTS["surface-inset"],
+        gradientPrimary: BOX_VARIANTS["gradient-primary"],
+        gradientSecondary: BOX_VARIANTS["gradient-secondary"],
+    },
 };
 
 /** Gradient helpers */
@@ -735,3 +819,12 @@ export const gradients = {
     hero: `linear-gradient(160deg, #EEF7F0 0%, #F5FAF7 40%, #F0F9EC 100%)`,
     glow: `radial-gradient(ellipse at center, ${alpha(BRAND.primary[600], 0.1)} 0%, transparent 70%)`,
 };
+
+
+
+
+
+
+
+
+

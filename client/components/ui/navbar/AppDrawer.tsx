@@ -100,7 +100,7 @@ const AppDrawer: React.FC<AppDrawerProps> = ({
 
             <List sx={{ flex: 1, overflowY: 'auto', py: 0 }}>
                 {categories.map((category, index) => {
-                    const isExpanded = expandedCategories[category.title] ?? true; // Default expanded for main sections
+                    const isExpanded = expandedCategories[category.title] ?? true; 
 
                     return (
                         <React.Fragment key={category.title}>

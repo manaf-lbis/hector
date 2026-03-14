@@ -31,7 +31,6 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                     {children}
                 </Box>
 
-                {/* Right Promo Column */}
                 {isMdUp && (
                     <Box
                         sx={{ width: { xs: '100%', md: '50%' }, p: 2, display: 'flex', flexDirection: 'column' }}
@@ -39,7 +38,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                         <Box
                             sx={{
                                 flex: 1,
-                                bgcolor: theme.palette.primary.light + '1A', // Very light primary shade
+                                bgcolor: theme.palette.primary.light + '1A',
                                 borderRadius: '24px',
                                 display: 'flex',
                                 flexDirection: 'column',

@@ -11,9 +11,11 @@ interface Props {
     needAnimation?: boolean;
     variant?: 'contained' | 'outlined' | 'text';
     size?: 'sm' | 'md' | 'lg' | { xs: 'sm' | 'md'; md: 'md' | 'lg'; lg?: 'lg' };
-    color?: 'primary' | 'secondary' | 'black' | 'white' | 'error'; // Controls the BUTTON look
-    textColor?: 'primary' | 'secondary' | 'black' | 'white' | 'error'; // Controls the TEXT only
+    color?: 'primary' | 'secondary' | 'black' | 'white' | 'error';
+    textColor?: 'primary' | 'secondary' | 'black' | 'white' | 'error';
     onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
+    disabled?: boolean;
+    sx?: any;
 }
 
 const ButtonWithIcon = ({
@@ -25,7 +27,9 @@ const ButtonWithIcon = ({
     size = 'md',
     color = 'primary',
     textColor,
-    onClick
+    onClick,
+    disabled = false,
+    sx = {}
 }: Props) => {
 
     const themeMap = {
@@ -36,7 +40,6 @@ const ButtonWithIcon = ({
         error: { bg: '#d32f2f', iconBg: '#b71c1c', iconColor: BRAND.white }
     };
 
-    // 2. Separate logic for Text Color
     const textMap = {
         primary: BRAND.primary[600],
         secondary: BRAND.secondary[500],
@@ -65,11 +68,12 @@ const ButtonWithIcon = ({
             variant={variant}
             color="inherit"
             disableElevation
+            disabled={disabled}
             sx={{
                 height: typeof size === 'object' ? { xs: getStyles(size.xs).height, md: getStyles(size.md).height, lg: getStyles(size.lg || 'lg').height } : getStyles(size).height,
 
-                color: `${finalTextColor} !important`,
-                backgroundColor: variant === 'contained' ? `${theme.bg} !important` : "transparent !important",
+                color: disabled ? 'rgba(255, 255, 255, 0.3) !important' : `${finalTextColor} !important`,
+                backgroundColor: disabled ? 'rgba(255, 255, 255, 0.05) !important' : (variant === 'contained' ? `${theme.bg} !important` : "transparent !important"),
 
                 ...(variant === 'outlined' ? {
                     background: alpha(theme.bg, 0.05),
@@ -86,9 +90,10 @@ const ButtonWithIcon = ({
                 gap: typeof size === 'object' ? { xs: getStyles(size.xs).gap, md: getStyles(size.md).gap } : getStyles(size).gap,
                 transition: "all 0.3s ease",
                 "&:hover": {
-                    transform: "translateY(-1px)",
-                    backgroundColor: variant === 'contained' ? alpha(theme.bg, 0.9) : alpha(theme.bg, 0.1),
-                }
+                    transform: disabled ? "none" : "translateY(-1px)",
+                    backgroundColor: disabled ? 'rgba(255, 255, 255, 0.05) !important' : (variant === 'contained' ? alpha(theme.bg, 0.9) : alpha(theme.bg, 0.1)),
+                },
+                ...sx
             }}
         >
             <Typography sx={{ fontWeight: 600, fontSize: "inherit", lineHeight: 1, whiteSpace: "nowrap", color: "inherit" }}>

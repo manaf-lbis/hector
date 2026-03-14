@@ -1,5 +1,3 @@
-// src/utils/validators/formValidator.ts
-
 export const validateFullName = (value: string): string | null => {
   const trimmed = value.trim();
   if (!trimmed) return "Full name is required";

@@ -1,0 +1,22 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const kyc_repo_1 = require("./kyc.repo");
+const kyc_service_1 = require("./kyc.service");
+const kyc_controller_1 = require("./kyc.controller");
+const auth_middleware_1 = require("../../shared/middleware/auth.middleware");
+const upload_middleware_1 = require("../../shared/middleware/upload.middleware");
+const types_1 = require("../user/types");
+const router = (0, express_1.Router)();
+const kycRepo = new kyc_repo_1.KycRepository();
+const kycService = new kyc_service_1.KycService(kycRepo);
+const kycController = new kyc_controller_1.KycController(kycService);
+router.post('/submit', auth_middleware_1.authMiddleware, upload_middleware_1.kycUpload, kycController.submitKyc.bind(kycController));
+router.get('/status', auth_middleware_1.authMiddleware, kycController.getKycStatus.bind(kycController));
+router.get('/config', kycController.getKycConfig.bind(kycController));
+router.get('/privacy-policy', auth_middleware_1.authMiddleware, kycController.getPrivacyPolicy.bind(kycController));
+router.get(/\/files\/(.*)/, auth_middleware_1.authMiddleware, kycController.getFile.bind(kycController));
+// Admin routes
+router.get('/pending', auth_middleware_1.authMiddleware, (0, auth_middleware_1.roleMiddleware)([types_1.Roles.admin]), kycController.getPendingKyc.bind(kycController));
+router.post('/review', auth_middleware_1.authMiddleware, (0, auth_middleware_1.roleMiddleware)([types_1.Roles.admin]), kycController.reviewKyc.bind(kycController));
+exports.default = router;

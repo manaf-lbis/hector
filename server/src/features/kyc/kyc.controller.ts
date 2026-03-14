@@ -6,7 +6,7 @@ import ApiError from "../../shared/utility/api.error";
 import { uploadToCloudinary } from "../../shared/utility/cloudinary";
 import cloudinary from "../../shared/utility/cloudinary";
 import https from 'https';
-import { DOCUMENT_TYPES, MAJOR_BANKS } from "./kyc.constants";
+import { DOCUMENT_TYPES, MAJOR_BANKS, MOCK_POLICIES } from "./kyc.constants";
 
 export class KycController {
     constructor(private _kycService: IKycService) { }
@@ -16,19 +16,16 @@ export class KycController {
             const userId = (req as any).user.userId;
             const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
-            // Extract file paths and upload to Cloudinary
             const filePaths: any = {};
             if (files) {
                 const uploadPromises = Object.keys(files).map(async (key) => {
                     const file = files[key][0];
                     const result = await uploadToCloudinary(file.buffer, 'kyc', 'authenticated');
-                    // We store the public_id to fetch it via proxy later
-                    filePaths[key] = result.public_id;
+                    filePaths[key] = `${result.public_id}.${result.format}`;
                 });
                 await Promise.all(uploadPromises);
             }
 
-            // Parse body if it's sent as a string (sometimes needed with multipart/form-data)
             let kycData = req.body;
             if (typeof kycData.data === 'string') {
                 kycData = JSON.parse(kycData.data);
@@ -84,14 +81,7 @@ export class KycController {
     }
     async getPrivacyPolicy(req: Request, res: Response, next: NextFunction) {
         try {
-            const mockPolicies = [
-                "By submitting this form, you authorize Hector to verify your identity using the provided documents. Your data will be stored securely using bank-grade encryption and will never be shared with third parties for marketing purposes. You consent to periodic KYC refresh checks as mandated by RBI guidelines.",
-                "I hereby declare that the details furnished above are true and correct to the best of my knowledge and belief and I undertake to inform you of any changes therein, immediately. In case any of the above information is found to be false or untrue or misleading or misrepresenting, I am aware that I may be held liable for it.",
-                "We collect your Aadhar/PAN and Bank details solely for the purpose of identity verification and regulatory compliance. We retain this data only as long as your account is active or as required by law. By proceeding, you agree to our comprehensive Data Protection Policy.",
-            ];
-
-            const randomPolicy = mockPolicies[Math.floor(Math.random() * mockPolicies.length)];
-
+            const randomPolicy = MOCK_POLICIES[Math.floor(Math.random() * MOCK_POLICIES.length)];
             sendSuccess(res, { policy: randomPolicy }, "Privacy policy retrieved");
         } catch (error) {
             next(error);
@@ -100,50 +90,63 @@ export class KycController {
 
     async getFile(req: Request, res: Response, next: NextFunction) {
         try {
-            // When using a regex route like /\/files\/(.*)/, the captured group 
-            // is available in req.params[0]
-            const publicId = req.params[0];
+            const path = req.params[0];
+            if (!path) return next(new ApiError("File path is required", 400));
 
-            if (!publicId || typeof publicId !== 'string') {
-                return next(new ApiError("Public ID is required", 400));
+            console.log(`[KYC_GET_FILE] Base Path: ${path}`);
+
+            const lastDotIndex = path.lastIndexOf('.');
+            const publicIdWithoutExt = lastDotIndex !== -1 ? path.substring(0, lastDotIndex) : path;
+            const ext = lastDotIndex !== -1 ? path.substring(lastDotIndex + 1).toLowerCase() : '';
+
+            const tryFetch = async (resourceType: 'image' | 'raw', id: string) => {
+                const signedUrl = cloudinary.url(id, {
+                    sign_url: true,
+                    type: 'authenticated',
+                    resource_type: resourceType,
+                    secure: true
+                });
+
+                return new Promise<{ status: number; contentType?: string; body?: string }>((resolve, reject) => {
+                    https.get(signedUrl, (cloudinaryRes) => {
+                        if (cloudinaryRes.statusCode === 200) {
+                            const contentType = cloudinaryRes.headers['content-type'] as string;
+                            if (contentType) res.setHeader('Content-Type', contentType);
+                            cloudinaryRes.pipe(res);
+                            resolve({ status: 200 });
+                        } else {
+                            let data = '';
+                            cloudinaryRes.on('data', chunk => data += chunk);
+                            cloudinaryRes.on('end', () => resolve({ status: cloudinaryRes.statusCode || 500, body: data }));
+                        }
+                    }).on('error', reject);
+                });
+            };
+
+            // Attempt sequence: 
+            // 1. If it looks like an image or PDF, try 'image' resource_type WITHOUT extension first
+            // 2. If that fails, try 'raw' resource_type WITH extension
+            // 3. Fallback to 'image' WITH extension just in case
+            
+            let result = await tryFetch('image', publicIdWithoutExt);
+            
+            if (result.status !== 200) {
+                console.log(`[KYC_GET_FILE] image/publicId fail (${result.status}), trying raw/fullPath...`);
+                result = await tryFetch('raw', path);
             }
 
-            // Generate a signed URL for the authenticated/private asset
-            const signedUrl = cloudinary.url(publicId, {
-                sign_url: true,
-                type: 'authenticated',
-                secure: true
-            });
+            if (result.status !== 200) {
+                console.log(`[KYC_GET_FILE] raw/fullPath fail (${result.status}), trying image/fullPath...`);
+                result = await tryFetch('image', path);
+            }
 
-            // Proxy the file stream from Cloudinary to the client
-            https.get(signedUrl, (cloudinaryResponse) => {
-                if (cloudinaryResponse.statusCode !== 200) {
-                    return next(new ApiError("Failed to fetch file from storage", 500));
-                }
-
-                // Safely handle potentially missing or array-typed headers
-                const contentType = cloudinaryResponse.headers['content-type'];
-                const contentLength = cloudinaryResponse.headers['content-length'];
-
-                if (contentType) {
-                    const finalContentType = Array.isArray(contentType) ? contentType[0] : contentType;
-                    res.setHeader('Content-Type', finalContentType as string);
-                } else {
-                    res.setHeader('Content-Type', 'application/octet-stream');
-                }
-
-                if (contentLength) {
-                    const finalContentLength = Array.isArray(contentLength) ? contentLength[0] : contentLength;
-                    res.setHeader('Content-Length', finalContentLength as string);
-                }
-
-                // Pipe the response directly to the client
-                cloudinaryResponse.pipe(res);
-            }).on('error', (e) => {
-                next(e);
-            });
+            if (result.status !== 200 && !res.headersSent) {
+                console.error(`[KYC_GET_FILE] All Cloudinary attempts failed. Last status: ${result.status}, Body: ${result.body}`);
+                return next(new ApiError("File not found or storage error", 404));
+            }
         } catch (error) {
-            next(error);
+            console.error(`[KYC_GET_FILE] Controller error:`, error);
+            if (!res.headersSent) next(error);
         }
     }
 

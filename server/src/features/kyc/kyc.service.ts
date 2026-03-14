@@ -13,7 +13,6 @@ export class KycService implements IKycService {
             if (existing.kycStatus === KycStatus.APPROVED) {
                 throw new ApiError("KYC is already approved", 400);
             }
-            // Update existing if rejected or resubmitted
             const updated = await this._kycRepo.updateKycData(userId, {
                 ...data,
                 kycStatus: KycStatus.RESUBMITTED
