@@ -11,9 +11,9 @@ interface Props {
     needAnimation?: boolean;
     variant?: 'contained' | 'outlined' | 'text';
     size?: 'sm' | 'md' | 'lg' | { xs: 'sm' | 'md'; md: 'md' | 'lg'; lg?: 'lg' };
-    color?: 'primary' | 'secondary' | 'black' | 'white'; // Controls the BUTTON look
-    textColor?: 'primary' | 'secondary' | 'black' | 'white'; // Controls the TEXT only
-    onClick?: () => void;
+    color?: 'primary' | 'secondary' | 'black' | 'white' | 'error'; // Controls the BUTTON look
+    textColor?: 'primary' | 'secondary' | 'black' | 'white' | 'error'; // Controls the TEXT only
+    onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
 const ButtonWithIcon = ({
@@ -32,7 +32,8 @@ const ButtonWithIcon = ({
         primary: { bg: BRAND.primary[600], iconBg: BRAND.primary[400], iconColor: BRAND.white },
         secondary: { bg: BRAND.secondary[500], iconBg: BRAND.primary[600], iconColor: BRAND.secondary[500] },
         black: { bg: BRAND.inkDark, iconBg: BRAND.muted, iconColor: BRAND.white },
-        white: { bg: BRAND.white, iconBg: BRAND.lightBg, iconColor: BRAND.primary[600] }
+        white: { bg: BRAND.white, iconBg: BRAND.lightBg, iconColor: BRAND.primary[600] },
+        error: { bg: '#d32f2f', iconBg: '#b71c1c', iconColor: BRAND.white }
     };
 
     // 2. Separate logic for Text Color
@@ -40,12 +41,12 @@ const ButtonWithIcon = ({
         primary: BRAND.primary[600],
         secondary: BRAND.secondary[500],
         black: BRAND.inkDark,
-        white: BRAND.white
+        white: BRAND.white,
+        error: '#d32f2f'
     };
 
     const theme = themeMap[color] || themeMap.primary;
 
-    // If textColor prop is passed, use it; otherwise fallback to a sensible default (like white for contained, or black/primary for others)
     const finalTextColor = textColor
         ? textMap[textColor]
         : (variant === 'contained' ? BRAND.white : textMap[color]);
@@ -67,7 +68,6 @@ const ButtonWithIcon = ({
             sx={{
                 height: typeof size === 'object' ? { xs: getStyles(size.xs).height, md: getStyles(size.md).height, lg: getStyles(size.lg || 'lg').height } : getStyles(size).height,
 
-                // Now strictly controlled by the independent textColor logic
                 color: `${finalTextColor} !important`,
                 backgroundColor: variant === 'contained' ? `${theme.bg} !important` : "transparent !important",
 
@@ -100,7 +100,6 @@ const ButtonWithIcon = ({
                     width: typeof size === 'object' ? { xs: getStyles(size.xs).iconSize, md: getStyles(size.md).iconSize } : getStyles(size).iconSize,
                     height: typeof size === 'object' ? { xs: getStyles(size.xs).iconSize, md: getStyles(size.md).iconSize } : getStyles(size).iconSize,
                     borderRadius: "50%",
-                    // These remain tied to the theme, not the text color
                     backgroundColor: theme.iconBg,
                     color: theme.iconColor,
                     display: "flex",

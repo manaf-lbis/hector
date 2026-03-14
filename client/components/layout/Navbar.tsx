@@ -21,6 +21,7 @@ import HomeIcon from '@mui/icons-material/Home';
 import InfoOutlineIcon from '@mui/icons-material/InfoOutline';
 import MiscellaneousServicesIcon from '@mui/icons-material/MiscellaneousServices';
 import CallIcon from '@mui/icons-material/Call';
+import BadgeIcon from '@mui/icons-material/Badge';
 
 const navLinks = [
     { id: 1, label: 'Home', href: '/', icon: HomeIcon },
@@ -80,6 +81,10 @@ const Navbar = () => {
         else router.push('/user');
     };
 
+    const handleKYC = () => {
+        router.push('/user/kyc');
+    };
+
     const handleNavigate = (href: string) => {
         router.push(href);
     };
@@ -96,6 +101,12 @@ const Navbar = () => {
                 action: () => handleNavigate(link.href)
             }))
         },
+        ...(isAuthenticated ? [{
+            title: 'Profile',
+            items: [
+                { id: 'kyc', label: 'Update KYC', icon: BadgeIcon, action: handleKYC },
+            ]
+        }] : []),
         {
             title: 'Account',
             items: isAuthenticated ? [

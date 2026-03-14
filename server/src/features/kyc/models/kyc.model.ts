@@ -35,23 +35,18 @@ const kycSchema = new Schema<IKyc>({
     },
     location: {
         type: String,
-        required: true
     },
     state: {
         type: String,
-        required: true
     },
     district: {
         type: String,
-        required: true
     },
     taluk: {
         type: String,
-        required: true
     },
     pincode: {
         type: String,
-        required: true
     },
     idCardFront: {
         type: String,

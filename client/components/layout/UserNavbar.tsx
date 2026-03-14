@@ -6,6 +6,7 @@ import UserProfile from "../ui/navbar/UserProfile";
 import AppDrawer, { NavCategory } from "../ui/navbar/AppDrawer";
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import LogoutIcon from '@mui/icons-material/Logout';
+import BadgeIcon from '@mui/icons-material/Badge';
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store";
 import { useRouter } from "next/navigation";
@@ -35,11 +36,21 @@ const UserNavbar = () => {
         router.push('/user');
     };
 
+    const handleKYC = () => {
+        router.push('/user/kyc');
+    };
+
     const toggleDrawer = (open: boolean) => () => {
         setDrawerOpen(open);
     };
 
     const categories: NavCategory[] = [
+        {
+            title: 'Profile',
+            items: [
+                { id: 'kyc', label: 'Update KYC', icon: BadgeIcon, action: handleKYC },
+            ]
+        },
         {
             title: 'Account',
             items: [

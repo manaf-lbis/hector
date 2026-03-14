@@ -18,7 +18,13 @@ export const kycApi = createApi({
             }),
             invalidatesTags: ['Kyc'],
         }),
+        getPrivacyPolicy: builder.query<{ policy: string }, void>({
+            query: () => '/kyc/privacy-policy',
+        }),
+        getKycConfig: builder.query<{ DOCUMENT_TYPES: { value: string, label: string }[], MAJOR_BANKS: string[] }, void>({
+            query: () => '/kyc/config',
+        }),
     }),
 });
 
-export const { useGetKycStatusQuery, useSubmitKycMutation } = kycApi;
+export const { useGetKycStatusQuery, useSubmitKycMutation, useGetPrivacyPolicyQuery, useGetKycConfigQuery } = kycApi;
