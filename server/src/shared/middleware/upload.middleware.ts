@@ -6,11 +6,14 @@ import ApiError from '../utility/api.error';
 const storage = multer.memoryStorage();
 
 const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-    const allowedTypes = /jpeg|jpg|png|pdf/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.pdf'];
+    const allowedMimetypes = ['image/jpeg', 'image/png', 'application/pdf'];
 
-    if (extname && mimetype) {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const isExtAllowed = allowedExtensions.includes(ext);
+    const isMimeAllowed = allowedMimetypes.includes(file.mimetype);
+
+    if (isExtAllowed && isMimeAllowed) {
         return cb(null, true);
     } else {
         cb(new ApiError('Only .png, .jpg, .jpeg and .pdf formats are allowed!', 400) as any);

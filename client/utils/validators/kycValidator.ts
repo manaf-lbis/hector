@@ -52,3 +52,25 @@ export const validateAccountNumber = (value: string): string | null => {
     if (!/^\d{9,18}$/.test(trimmed)) return "Account number must be 9-18 digits";
     return null;
 };
+
+export const validateFile = (file: File): string | null => {
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.pdf'];
+    const allowedMimeTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+    
+    const fileName = file.name.toLowerCase();
+    const extension = fileName.substring(fileName.lastIndexOf('.'));
+    
+    if (!allowedExtensions.includes(extension)) {
+        return "Invalid file extension. Please upload JPG, PNG or PDF.";
+    }
+    
+    if (!allowedMimeTypes.includes(file.type)) {
+        return "Invalid file type. Please upload a valid image or PDF.";
+    }
+    
+    if (file.size > 5 * 1024 * 1024) {
+        return "File is too large. Maximum size is 5MB.";
+    }
+    
+    return null;
+};

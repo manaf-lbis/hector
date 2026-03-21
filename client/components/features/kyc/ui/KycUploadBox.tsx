@@ -17,8 +17,31 @@ interface KycUploadBoxProps {
 const KycUploadBox: React.FC<KycUploadBoxProps> = ({
     fileKey, label, hint, file, error, onFileSelect, onRemove, onPreview
 }) => {
+    const [isDragging, setIsDragging] = React.useState(false);
+
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const f = e.target.files?.[0];
+        if (f) onFileSelect(f);
+    };
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(true);
+    };
+
+    const handleDragLeave = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(false);
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(false);
+        
+        const f = e.dataTransfer.files?.[0];
         if (f) onFileSelect(f);
     };
 
@@ -38,26 +61,32 @@ const KycUploadBox: React.FC<KycUploadBoxProps> = ({
                 onChange={handleFileChange} 
             />
             
-            <Box sx={{
-                width: '100%',
-                minHeight: 240,
-                border: '2px dashed',
-                borderColor: error ? 'error.main' : file ? '#a6e22e' : 'rgba(0,0,0,0.08)',
-                borderRadius: 2,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                bgcolor: file ? alpha('#a6e22e', 0.03) : 'transparent',
-                '&:hover': { 
-                    borderColor: '#a6e22e',
-                    boxShadow: '0 10px 30px rgba(0,0,0,0.03)',
-                    transform: 'translateY(-2px)'
-                },
-                position: 'relative'
-            }}>
+            <Box 
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                sx={{
+                    width: '100%',
+                    minHeight: 240,
+                    border: '2px dashed',
+                    borderColor: error ? 'error.main' : isDragging ? '#a6e22e' : file ? '#a6e22e' : 'rgba(0,0,0,0.08)',
+                    borderRadius: 2,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    bgcolor: isDragging ? alpha('#a6e22e', 0.1) : file ? alpha('#a6e22e', 0.03) : 'transparent',
+                    boxShadow: isDragging ? '0 0 20px rgba(166, 226, 46, 0.2)' : 'none',
+                    '&:hover': { 
+                        borderColor: '#a6e22e',
+                        boxShadow: '0 10px 30px rgba(0,0,0,0.03)',
+                        transform: 'translateY(-2px)'
+                    },
+                    position: 'relative'
+                }}
+            >
                 <label htmlFor={`file-${fileKey}`} style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: '32px' }}>
                     {file ? (
                         <Box sx={{ textAlign: 'center', width: '100%' }}>

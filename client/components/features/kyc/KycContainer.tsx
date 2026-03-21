@@ -6,7 +6,7 @@ import { ArrowBack as ArrowBackIcon, ArrowForward as ArrowForwardIcon, Send as S
 import { useRouter } from 'next/navigation';
 import { useSubmitKycMutation, useGetPrivacyPolicyQuery } from '@/store/api/kyc.api';
 import ButtonWithIcon from '@/components/ui/ButtonWithIcon';
-import { validateDob, validateDocumentNumber, validateIfsc, validateAccountNumber } from '@/utils/validators/kycValidator';
+import { validateDob, validateDocumentNumber, validateIfsc, validateAccountNumber, validateFile } from '@/utils/validators/kycValidator';
 
 import IdentityStep from './steps/IdentityStep';
 import UploadStep from './steps/UploadStep';
@@ -78,8 +78,9 @@ const KycContainer: React.FC<KycContainerProps> = ({ user, initialData, onSucces
     };
 
     const handleFileSelect = (key: string, file: File) => {
-        if (file.size > 5 * 1024 * 1024) {
-            setErrors(p => ({ ...p, [key]: 'File must be under 5 MB' }));
+        const fileErr = validateFile(file);
+        if (fileErr) {
+            setErrors(p => ({ ...p, [key]: fileErr }));
             return;
         }
         setErrors(p => ({ ...p, [key]: '' }));
@@ -182,7 +183,8 @@ const KycContainer: React.FC<KycContainerProps> = ({ user, initialData, onSucces
         } catch { /* error handled by UI */ }
     };
 
-    if (isSuccess) return null;
+    // Removing this so we can show the status after success
+    // if (isSuccess) return null;
 
     const renderStepContent = (step: number) => {
         switch (step) {
@@ -203,7 +205,6 @@ const KycContainer: React.FC<KycContainerProps> = ({ user, initialData, onSucces
             display: 'flex',
             flexDirection: 'column',
         }}>
-            {/* Global Header & Stepper (Full Width) */}
             <Box sx={{ flexShrink: 0, zIndex: 10 }}>
                 {/* Header / Breadcrumbs */}
                 <Box sx={{ px: { xs: 4, md: 8 }, pt: 4, pb: isSubmitted ? 4 : 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

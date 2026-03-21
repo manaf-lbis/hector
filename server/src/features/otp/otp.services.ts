@@ -67,13 +67,17 @@ export class OtpService implements IOtpService {
         const now = new Date();
 
         if (isExist && isAfter(isExist.windowExpiresAt, now)) {
-            if (isAfter(isExist.expiresAt, now)) {
-                const timeRemaining = formatDistanceToNow(isExist.expiresAt);
-                const secondsLeft = differenceInSeconds(isExist.expiresAt, now);
-                throw new ApiError(
-                    `Active session found. Please try again in ${timeRemaining} (${secondsLeft}s).`,
-                    400
-                );
+            const secondsSinceUpdate = differenceInSeconds(now, isExist.resendedAt);
+            const resendLimit = Number(process.env.OTP_RESEND_SEC) || 60;
+            const maxResend = Number(process.env.MAX_OTP_RESEND_COUNT) || 3;
+
+            if (secondsSinceUpdate < resendLimit) {
+                throw new ApiError(`Please wait ${resendLimit - secondsSinceUpdate}s before requesting a new code.`, 400);
+            }
+
+            if (isExist.resendCount >= maxResend) {
+                const timeRemaining = formatDistanceToNow(isExist.windowExpiresAt);
+                throw new ApiError(`Maximum resend attempts reached for this session. Please try again ${timeRemaining}.`, 400);
             }
         }
 
@@ -81,13 +85,19 @@ export class OtpService implements IOtpService {
         const windowDuration = 15 * 60 * 1000;
         const codeDuration = Number(process.env.OTP_EXPIRY_SEC) * 1000;
 
-        return await this._otpRepo.create({
-            email,
-            otpHash,
-            purpose: OtpPurpose.signup,
-            expiresAt: new Date(now.getTime() + codeDuration),
-            windowExpiresAt: isExist && isAfter(isExist.windowExpiresAt, now) ? isExist.windowExpiresAt : new Date(now.getTime() + windowDuration)
-        });
+        const otpData = await this._otpRepo.upsert(
+            { email, purpose: OtpPurpose.signup },
+            {
+                otpHash,
+                attempts: 0,
+                resendCount: (isExist && isAfter(isExist.windowExpiresAt, now)) ? isExist.resendCount + 1 : 0,
+                resendedAt: now,
+                expiresAt: new Date(now.getTime() + codeDuration),
+                windowExpiresAt: (isExist && isAfter(isExist.windowExpiresAt, now)) ? isExist.windowExpiresAt : new Date(now.getTime() + windowDuration),
+            }
+        );
+
+        return otpData;
     }
 
     async validateOtp({ otpId, submittedOtp }: { otpId: Types.ObjectId, submittedOtp: string }): Promise<boolean> {
