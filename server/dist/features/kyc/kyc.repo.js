@@ -17,11 +17,11 @@ class KycRepository extends base_repo_1.BaseRepository {
     async getKycById(id) {
         return await this.findById(id);
     }
-    async updateKycStatus(id, status, approvedBy) {
-        const updateData = { kycStatus: status };
-        if (status === types_1.KycStatus.APPROVED && approvedBy) {
+    async updateKycStatus(id, status, adminId, reason) {
+        const updateData = { kycStatus: status, reason };
+        if (status === types_1.KycStatus.APPROVED && adminId) {
             updateData.approvedOn = new Date();
-            updateData.approvedBy = approvedBy;
+            updateData.approvedBy = adminId;
         }
         return await this.update(id, updateData);
     }

@@ -38,18 +38,19 @@ class AuthService {
         const authToken = (0, token_utility_1.generateAuthToken)({ name, email, phone, otpId: otpData._id });
         return { authToken, resendOtpInSeconds: this._OTP_RESEND_SEC };
     }
-    async verifySignup({ otp, name, email, phone, otpId }) {
+    async verifySignup({ otp, name, email, phone, otpId, ip, userAgent }) {
         await this._otpService.validateOtp({ otpId, submittedOtp: otp });
         const user = await this._userService.createUser({ name, email, phone, role: types_1.Roles.user });
         const tokens = (0, token_utility_1.generateTokens)({ userId: user._id, role: user.role });
         await this._userService.updateUserToken({ userId: user._id, refreshToken: tokens.refreshToken });
+        await this._userService.recordLogin(user._id, ip, userAgent);
         return {
             accessToken: tokens.accessToken,
             refreshToken: tokens.refreshToken,
             role: user.role
         };
     }
-    async verifyLogin({ otp, email, otpId }) {
+    async verifyLogin({ otp, email, otpId, ip, userAgent }) {
         await this._otpService.validateOtp({ otpId, submittedOtp: otp });
         console.log(email);
         const user = await this._userService.findByIdentifier({ identifier: email });
@@ -57,6 +58,7 @@ class AuthService {
             throw new api_error_1.default('user not found');
         const tokens = (0, token_utility_1.generateTokens)({ userId: user._id, role: user.role });
         await this._userService.updateUserToken({ userId: user._id, refreshToken: tokens.refreshToken });
+        await this._userService.recordLogin(user._id, ip, userAgent);
         return {
             accessToken: tokens.accessToken,
             refreshToken: tokens.refreshToken,

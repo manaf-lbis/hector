@@ -16,9 +16,13 @@ class KycService {
             if (existing.kycStatus === types_1.KycStatus.APPROVED) {
                 throw new api_error_1.default("KYC is already approved", 400);
             }
+            if (existing.kycStatus === types_1.KycStatus.REJECTED) {
+                throw new api_error_1.default("KYC was rejected. You cannot resubmit.", 403);
+            }
             const updated = await this._kycRepo.updateKycData(userId, {
                 ...data,
-                kycStatus: types_1.KycStatus.RESUBMITTED
+                kycStatus: types_1.KycStatus.RESUBMITTED,
+                reason: undefined // Clear the previous reason on resubmit
             });
             if (!updated)
                 throw new api_error_1.default("Failed to update KYC", 500);
@@ -33,8 +37,8 @@ class KycService {
     async getKycStatus(userId) {
         return await this._kycRepo.getKycByUserId(userId);
     }
-    async reviewKyc(kycId, status, adminId) {
-        return await this._kycRepo.updateKycStatus(kycId, status, adminId);
+    async reviewKyc(kycId, status, adminId, reason) {
+        return await this._kycRepo.updateKycStatus(kycId, status, adminId, reason);
     }
     async getPendingKyc() {
         return await this._kycRepo.getAllKycList(types_1.KycStatus.PENDING);

@@ -6,11 +6,13 @@ import UserProfile from "./UserProfile";
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import LogoutIcon from '@mui/icons-material/Logout';
 import LoginIcon from '@mui/icons-material/Login';
+import BadgeIcon from '@mui/icons-material/Badge';
 import { SvgIconComponent } from '@mui/icons-material';
 
 interface MobileNavProps {
     isAuthenticated: boolean;
     user: any;
+    kycStatus?: string;
     navLinks: { id: number | string; label: string; href: string; icon: SvgIconComponent }[];
     onLogout: () => void;
     onDashboard: () => void;
@@ -21,6 +23,7 @@ interface MobileNavProps {
 const MobileNav: React.FC<MobileNavProps> = ({
     isAuthenticated,
     user,
+    kycStatus,
     navLinks,
     onLogout,
     onDashboard,
@@ -41,6 +44,12 @@ const MobileNav: React.FC<MobileNavProps> = ({
                 action: () => onNavigate(link.href)
             }))
         },
+        ...(isAuthenticated && user?.role !== 'admin' ? [{
+            title: 'Profile',
+            items: [
+                { id: 'kyc', label: 'Update KYC', icon: BadgeIcon, action: () => onNavigate('/user/kyc') },
+            ]
+        }] : []),
         {
             title: 'Account',
             items: isAuthenticated ? [
@@ -59,7 +68,7 @@ const MobileNav: React.FC<MobileNavProps> = ({
                 sx={{ cursor: 'pointer' }}
             >
                 {isAuthenticated ? (
-                    <UserProfile user={user} position="right" />
+                    <UserProfile user={user} kycStatus={kycStatus} position="right" />
                 ) : (
                     <IconButton color="primary">
                         <MenuIcon />

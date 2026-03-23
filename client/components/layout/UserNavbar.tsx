@@ -11,7 +11,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store";
 import { useRouter } from "next/navigation";
 import { logout } from "@/store/slices/auth.slice";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useLogoutMutation } from "@/store/api/auth.api";
 
 const UserNavbar = () => {
@@ -20,6 +20,9 @@ const UserNavbar = () => {
     const router = useRouter();
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [serverLogout] = useLogoutMutation();
+    const currentKycStatus = user?.kycStatus;
+    const currentKycData = user?.kycData;
+
 
     const handleLogout = async () => {
         try {
@@ -45,12 +48,12 @@ const UserNavbar = () => {
     };
 
     const categories: NavCategory[] = [
-        {
+        ...(user?.role !== 'admin' ? [{
             title: 'Profile',
             items: [
                 { id: 'kyc', label: 'Update KYC', icon: BadgeIcon, action: handleKYC },
             ]
-        },
+        }] : []),
         {
             title: 'Account',
             items: [
@@ -76,12 +79,15 @@ const UserNavbar = () => {
 
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         <Box onClick={toggleDrawer(true)} sx={{ cursor: 'pointer' }}>
-                            <UserProfile user={user} position="right" />
+                            <UserProfile user={user} kycStatus={currentKycStatus} kycData={currentKycData} position="right" />
                         </Box>
                         <AppDrawer 
                             open={drawerOpen}
                             onClose={toggleDrawer(false)}
                             user={user}
+                            kycStatus={currentKycStatus}
+                            kycData={currentKycData}
+
                             categories={categories}
                             anchor="right"
                         />

@@ -71,9 +71,24 @@ const userSchema = new mongoose_1.Schema({
     kyc: {
         type: mongoose_1.Schema.ObjectId,
         ref: 'Kyc'
+    },
+    customId: {
+        type: String,
+        unique: true
+    },
+    lastLogin: {
+        type: Date
     }
 }, {
     timestamps: true
 });
+userSchema.pre('save', async function (next) {
+    if (!this.customId) {
+        const randomNum = Math.floor(100000 + Math.random() * 900000);
+        this.customId = `#${randomNum}`;
+    }
+    next();
+});
 userSchema.index({ email: 1 });
+userSchema.index({ customId: 1 });
 exports.UserModel = mongoose_1.default.model("User", userSchema);

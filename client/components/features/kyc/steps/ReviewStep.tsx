@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box, Typography, Divider, IconButton, alpha, FormControlLabel, Checkbox, TextField } from '@mui/material';
+import { Box, Typography, Divider, IconButton, alpha, FormControlLabel, Checkbox, TextField, useTheme } from '@mui/material';
+import { BOX_VARIANTS } from '@/app/theme';
 import { UploadFile as FileIcon, Visibility as VisibilityIcon } from '@mui/icons-material';
 
 interface ReviewStepProps {
@@ -11,15 +12,17 @@ interface ReviewStepProps {
     onOpenPolicy: () => void;
     onAgreedChange: (val: boolean) => void;
     isReviewOnly?: boolean;
+    status?: string;
     config?: {
         DOCUMENT_TYPES: { value: string, label: string }[];
         MAJOR_BANKS: string[];
     };
 }
 
-const ReviewStep: React.FC<ReviewStepProps> = ({ 
-    user, form, files, errors, onPreviewFile, onOpenPolicy, onAgreedChange, isReviewOnly, config 
+const ReviewStep: React.FC<ReviewStepProps> = ({
+    user, form, files, errors, onPreviewFile, onOpenPolicy, onAgreedChange, isReviewOnly, status, config
 }) => {
+    const theme = useTheme();
     const summaryItems = [
         { label: 'Full Name', value: user?.name },
         { label: 'Date of Birth', value: form.dob },
@@ -31,35 +34,63 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
     ];
 
     return (
-            <Box sx={{ mb: 6 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                    <Typography variant="h6" fontWeight={900} color="text.primary" letterSpacing="-0.02em">
-                        Details Overview
+        <Box sx={{ mb: 6 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Typography variant="h6" fontWeight={900} color="text.primary" letterSpacing="-0.02em">
+                    Details Overview
+                </Typography>
+                {isReviewOnly && (
+                    <Typography
+                        variant="caption"
+                        fontWeight={900}
+                        color={status === 'approved' ? "#a6e22e" : "#f59e0b"}
+                        sx={{
+                            bgcolor: alpha(status === 'approved' ? "#a6e22e" : "#f59e0b", 0.1),
+                            px: 1.5, py: 0.5, borderRadius: 1.5,
+                            textTransform: 'uppercase', letterSpacing: 1
+                        }}
+                    >
+                        {status === 'approved' ? 'Verified' : 'Submitted'}
                     </Typography>
-                    {isReviewOnly && (
-                        <Typography variant="caption" fontWeight={900} color="#a6e22e" sx={{ bgcolor: alpha('#a6e22e', 0.1), px: 1.5, py: 0.5, borderRadius: 1.5, textTransform: 'uppercase', letterSpacing: 1 }}>
-                            Submitted
-                        </Typography>
-                    )}
-                </Box>
-                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 3 }}>
-                    {summaryItems.map(({ label, value }) => (
-                        <Box key={label} sx={{ 
-                            gridColumn: label === 'Full Name' ? '1 / -1' : 'auto' 
-                        }}>
-                            <Typography variant="body2" fontWeight={800} color="text.primary" sx={{ mb: 1 }}>
-                                {label}
+                )}
+            </Box>
+
+            {files.profilePicture && (
+                <Box sx={{ mb: 6, display: 'flex', alignItems: 'center', gap: 3, p: 3, borderRadius: 3, bgcolor: alpha(theme.palette.primary.main, 0.03), border: '1px solid', borderColor: alpha(theme.palette.primary.main, 0.1) }}>
+                    <Box
+                        component="img"
+                        src={typeof files.profilePicture === 'string' ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'}/kyc/files/${files.profilePicture}` : URL.createObjectURL(files.profilePicture)}
+                        sx={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: '3px solid #fff', boxShadow: theme.shadows[2] }}
+                    />
+                    <Box>
+                        <Typography variant="subtitle1" fontWeight={800} color="text.primary">Profile Identity Photo</Typography>
+                        <Typography variant="body2" color="text.secondary">This photo will be used for your official profile and documents.</Typography>
+                        {status === 'approved' && user.kycData?.approvedOn && (
+                            <Typography variant="caption" sx={{ display: 'block', mt: 1, color: 'success.main', fontWeight: 700 }}>
+                                Verified on {new Date(user.kycData.approvedOn).toLocaleDateString()} by {user.kycData.approvedBy?.name || 'System Admin'}
                             </Typography>
-                            <TextField 
-                                fullWidth 
-                                value={value || '—'} 
-                                disabled 
-                                variant="outlined" 
-                                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
-                            />
-                        </Box>
-                    ))}
+                        )}
+                    </Box>
                 </Box>
+            )}
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 3 }}>
+                {summaryItems.map(({ label, value }) => (
+                    <Box key={label} sx={{
+                        gridColumn: label === 'Full Name' ? '1 / -1' : 'auto'
+                    }}>
+                        <Typography variant="body2" fontWeight={800} color="text.primary" sx={{ mb: 1 }}>
+                            {label}
+                        </Typography>
+                        <TextField
+                            fullWidth
+                            value={value || '—'}
+                            disabled
+                            variant="outlined"
+                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
+                        />
+                    </Box>
+                ))}
+            </Box>
 
             <Divider sx={{ mb: 6, opacity: 0.1 }} />
 
@@ -73,23 +104,19 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
                             idCardFront: 'ID Card (Front)',
                             idCardBack: 'ID Card (Back)',
                             bankPassbook: 'Bank Passbook',
+                            profilePicture: 'Profile Picture'
                         };
                         const displayLabel = labels[key] || 'Document';
                         return (
-                            <Box key={key} sx={{
-                                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                p: 2, borderRadius: 3, border: '1px solid', borderColor: 'divider',
-                                transition: 'all 0.2s',
-                                '&:hover': { bgcolor: alpha('#000', 0.01), borderColor: 'text.secondary' }
-                            }}>
+                            <Box key={key} sx={BOX_VARIANTS['surface-review-item']}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                                     <FileIcon color="action" fontSize="small" />
                                     <Typography variant="body2" fontWeight={700} color="text.primary">
                                         {displayLabel}
                                     </Typography>
                                 </Box>
-                                <IconButton 
-                                    size="small" 
+                                <IconButton
+                                    size="small"
                                     onClick={() => onPreviewFile(file as any)}
                                     sx={{ color: 'primary.main', bgcolor: alpha('#1976d2', 0.05) }}
                                 >
@@ -104,18 +131,18 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
             {!isReviewOnly && (
                 <>
                     <Divider sx={{ mb: 6, opacity: 0.1 }} />
-                    <Box sx={{ p: 2, borderRadius: 2, border: '1px solid', borderColor: alpha('#1976d2', 0.1) }}>
+                    <Box sx={BOX_VARIANTS['surface-outlined']}>
                         <Typography variant="subtitle2" fontWeight={900} color="text.primary" gutterBottom>
                             Declaration
                         </Typography>
-                        
+
                         <FormControlLabel
                             sx={{ alignItems: 'flex-start', mt: 1 }}
                             control={(
-                                <Checkbox 
-                                    checked={form.agreedFinal} 
-                                    onChange={e => onAgreedChange(e.target.checked)} 
-                                    color={errors.agreedFinal ? "error" : "primary"} 
+                                <Checkbox
+                                    checked={form.agreedFinal}
+                                    onChange={e => onAgreedChange(e.target.checked)}
+                                    color={errors.agreedFinal ? "error" : "primary"}
                                     sx={{ mt: -0.5, p: 0.5 }}
                                 />
                             )}

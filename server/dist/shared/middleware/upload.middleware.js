@@ -9,10 +9,12 @@ const path_1 = __importDefault(require("path"));
 const api_error_1 = __importDefault(require("../utility/api.error"));
 const storage = multer_1.default.memoryStorage();
 const fileFilter = (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|pdf/;
-    const extname = allowedTypes.test(path_1.default.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
-    if (extname && mimetype) {
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.pdf'];
+    const allowedMimetypes = ['image/jpeg', 'image/png', 'application/pdf'];
+    const ext = path_1.default.extname(file.originalname).toLowerCase();
+    const isExtAllowed = allowedExtensions.includes(ext);
+    const isMimeAllowed = allowedMimetypes.includes(file.mimetype);
+    if (isExtAllowed && isMimeAllowed) {
         return cb(null, true);
     }
     else {

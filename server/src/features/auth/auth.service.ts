@@ -46,14 +46,15 @@ export class AuthService implements IAuthService {
         return { authToken, resendOtpInSeconds: this._OTP_RESEND_SEC }
     }
 
-    async verifySignup({ otp, name, email, phone, otpId }: { otp: string; name: string; email: string; phone: string; otpId: Types.ObjectId; }): Promise<{ accessToken: string; refreshToken: string; role: Roles }> {
+    async verifySignup({ otp, name, email, phone, otpId, ip, userAgent }: { otp: string; name: string; email: string; phone: string; otpId: Types.ObjectId; ip?: string; userAgent?: string }): Promise<{ accessToken: string; refreshToken: string; role: Roles }> {
 
         await this._otpService.validateOtp({ otpId, submittedOtp: otp });
         const user = await this._userService.createUser({ name, email, phone, role: Roles.user });
 
-        const tokens = generateTokens({ userId: user._id, role: user.role });
+        const tokens = generateTokens({ userId: user._id, role: user.role, name: user.name });
 
         await this._userService.updateUserToken({ userId: user._id, refreshToken: tokens.refreshToken });
+        await this._userService.recordLogin(user._id, ip, userAgent);
 
         return {
             accessToken: tokens.accessToken,
@@ -62,7 +63,7 @@ export class AuthService implements IAuthService {
         }
     }
 
-    async verifyLogin({ otp, email, otpId }: { otp: string; email: string; otpId: Types.ObjectId; }): Promise<{ accessToken: string; role: Roles, refreshToken: string }> {
+    async verifyLogin({ otp, email, otpId, ip, userAgent }: { otp: string; email: string; otpId: Types.ObjectId; ip?: string; userAgent?: string }): Promise<{ accessToken: string; role: Roles, refreshToken: string }> {
 
         await this._otpService.validateOtp({ otpId, submittedOtp: otp });
         console.log(email);
@@ -71,8 +72,9 @@ export class AuthService implements IAuthService {
 
         if (!user) throw new ApiError('user not found')
 
-        const tokens = generateTokens({ userId: user._id, role: user.role });
+        const tokens = generateTokens({ userId: user._id, role: user.role, name: user.name });
         await this._userService.updateUserToken({ userId: user._id, refreshToken: tokens.refreshToken });
+        await this._userService.recordLogin(user._id, ip, userAgent);
 
 
         return {
@@ -100,7 +102,7 @@ export class AuthService implements IAuthService {
             throw new ApiError('Invalid refresh token', 401);
         }
 
-        const tokens = generateTokens({ userId: user._id, role: user.role });
+        const tokens = generateTokens({ userId: user._id, role: user.role, name: user.name });
         await this._userService.updateUserToken({ userId: user._id, refreshToken: tokens.refreshToken });
 
         return {
@@ -114,15 +116,31 @@ export class AuthService implements IAuthService {
         await this._userService.updateUserToken({ userId, refreshToken: "" });
     }
 
-    async getMe(userId: Types.ObjectId): Promise<{ name: string, email: string, phone: string, role: Roles }> {
+    async getMe(userId: Types.ObjectId): Promise<{ name: string, email: string, phone: string, role: Roles, kycStatus?: string, kycData?: any }> {
         const user = await this._userService.getActiveUserById({ userId });
         if (!user) throw new ApiError('User not found', 404);
+
+        let kycStatus = undefined;
+        let kycData = undefined;
+
+        try {
+            const mongoose = require('mongoose');
+            const kyc = await mongoose.model('Kyc').findOne({ user: userId }).select('kycStatus profilePicture');
+            if (kyc) {
+                kycStatus = kyc.kycStatus;
+                kycData = { profilePicture: kyc.profilePicture };
+            }
+        } catch (error) {
+            console.error('Error fetching KYC for /me', error);
+        }
 
         return {
             name: user.name,
             email: user.email,
             phone: user.phone,
-            role: user.role as Roles
+            role: user.role as Roles,
+            kycStatus,
+            kycData
         };
     }
 }

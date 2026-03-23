@@ -57,8 +57,10 @@ export class KycController {
 
     async getPendingKyc(req: Request, res: Response, next: NextFunction) {
         try {
-            const kycList = await this._kycService.getPendingKyc();
-            sendSuccess(res, kycList, "Pending KYC list retrieved");
+            const search = req.query.search as string;
+            const status = req.query.status as string;
+            const result = await this._kycService.getPendingKyc(search, status);
+            sendSuccess(res, result, "KYC list retrieved successfully");
         } catch (error) {
             next(error);
         }
@@ -66,14 +68,21 @@ export class KycController {
 
     async reviewKyc(req: Request, res: Response, next: NextFunction) {
         try {
-            const { kycId, status } = req.body;
+            const { kycId, status, reason } = req.body;
             const adminId = (req as any).user.userId;
 
-            if (![KycStatus.APPROVED, KycStatus.REJECTED].includes(status)) {
+            if (![KycStatus.APPROVED, KycStatus.REJECTED, KycStatus.RETURNED].includes(status)) {
                 throw new ApiError("Invalid status", 400);
             }
 
-            const kyc = await this._kycService.reviewKyc(kycId, status, adminId);
+            if ((status === KycStatus.REJECTED || status === KycStatus.RETURNED) && !reason) {
+                throw new ApiError(`Reason is required for ${status}`, 400);
+            }
+
+            const adminName = (req as any).user.name;
+            const adminRole = (req as any).user.role;
+
+            const kyc = await this._kycService.reviewKyc(kycId, status, adminId, reason, adminName, adminRole);
             sendSuccess(res, kyc, `KYC ${status} successfully`);
         } catch (error) {
             next(error);
@@ -123,13 +132,10 @@ export class KycController {
                 });
             };
 
-            // Attempt sequence: 
-            // 1. If it looks like an image or PDF, try 'image' resource_type WITHOUT extension first
-            // 2. If that fails, try 'raw' resource_type WITH extension
-            // 3. Fallback to 'image' WITH extension just in case
-            
+
+
             let result = await tryFetch('image', publicIdWithoutExt);
-            
+
             if (result.status !== 200) {
                 console.log(`[KYC_GET_FILE] image/publicId fail (${result.status}), trying raw/fullPath...`);
                 result = await tryFetch('raw', path);
@@ -151,10 +157,10 @@ export class KycController {
     }
 
     async getKycConfig(req: Request, res: Response, next: NextFunction) {
-            try {
-                sendSuccess(res, { DOCUMENT_TYPES, MAJOR_BANKS }, "KYC config retrieved");
-            } catch (error) {
-                next(error);
-            }
+        try {
+            sendSuccess(res, { DOCUMENT_TYPES, MAJOR_BANKS }, "KYC config retrieved");
+        } catch (error) {
+            next(error);
         }
     }
+}

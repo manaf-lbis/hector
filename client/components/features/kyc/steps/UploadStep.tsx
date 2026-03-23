@@ -6,6 +6,7 @@ interface UploadStepProps {
     files: any;
     errors: any;
     onFileSelect: (key: string, file: File) => void;
+    onProfilePicSelect: (file: File) => void;
     onRemoveFile: (key: string) => void;
     onPreviewFile: (fileOrPublicId: File | string) => void;
     agreed: boolean;
@@ -13,10 +14,25 @@ interface UploadStepProps {
 }
 
 const UploadStep: React.FC<UploadStepProps> = ({ 
-    files, errors, onFileSelect, onRemoveFile, onPreviewFile, agreed, onAgreedChange 
+    files, errors, onFileSelect, onProfilePicSelect, onRemoveFile, onPreviewFile, agreed, onAgreedChange 
 }) => {
     return (
         <Box sx={{ width: '100%', maxWidth: 800 }}>
+            <Box sx={{ mb: 6 }}>
+                <KycUploadBox 
+                    fileKey="profilePicture" 
+                    label="Profile Picture" 
+                    hint="A clear photo of your face · png, jpeg"
+                    file={files.profilePicture}
+                    error={errors.profilePicture}
+                    onFileSelect={(f) => onProfilePicSelect(f)}
+                    onRemove={() => onRemoveFile('profilePicture')}
+                    onPreview={() => onPreviewFile(files.profilePicture)}
+                />
+            </Box>
+
+            <Divider sx={{ mb: 6, opacity: 0.1 }} />
+
             <Box sx={{ display: 'grid', gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))" , gap: 4 }}>
                 <KycUploadBox 
                     fileKey="idCardFront" 

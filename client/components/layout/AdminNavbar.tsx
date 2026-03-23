@@ -14,6 +14,8 @@ import { useState } from "react";
 import { useLogoutMutation } from "@/store/api/auth.api";
 
 import GridViewIcon from '@mui/icons-material/GridView';
+import PeopleIcon from '@mui/icons-material/People';
+import assignmentIndIcon from '@mui/icons-material/AssignmentInd';
 import { keyframes } from "@mui/system";
 
 const pulse = keyframes`
@@ -54,6 +56,13 @@ const AdminNavbar = () => {
             items: [
                 { id: 1, label: 'Dashboard', icon: DashboardIcon, action: handleDashboard },
                 { id: 2, label: 'Logout', icon: LogoutIcon, action: handleLogout },
+            ]
+        },
+        {
+            title: 'User',
+            items: [
+                { id: 3, label: 'Users', icon: PeopleIcon, action: () => router.push('/admin/users') },
+                { id: 4, label: 'KYC', icon: assignmentIndIcon, action: () => router.push('/admin/kyc') },
             ]
         }
     ];

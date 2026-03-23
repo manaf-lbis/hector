@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Box, Stepper, Step, StepLabel, Typography, IconButton, Alert, alpha, Card, Divider, Grid, Breadcrumbs, Link as MuiLink, useMediaQuery, useTheme } from '@mui/material';
-import { ArrowBack as ArrowBackIcon, ArrowForward as ArrowForwardIcon, Send as SendIcon, NavigateNext as NavigateNextIcon, Description as DocIcon } from '@mui/icons-material';
+import { Box, Stepper, Step, StepLabel, Typography, IconButton, Alert, alpha, Card, Divider, Grid, Breadcrumbs, Link as MuiLink, useMediaQuery, useTheme, Button } from '@mui/material';
+import { BOX_VARIANTS } from '@/app/theme';
+import { ArrowBack as ArrowBackIcon, ArrowForward as ArrowForwardIcon, Send as SendIcon, NavigateNext as NavigateNextIcon, Description as DocIcon, Edit as EditIcon } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { useSubmitKycMutation, useGetPrivacyPolicyQuery } from '@/store/api/kyc.api';
 import ButtonWithIcon from '@/components/ui/ButtonWithIcon';
@@ -13,7 +14,9 @@ import UploadStep from './steps/UploadStep';
 import ReviewStep from './steps/ReviewStep';
 import KycPreviewModal from './ui/KycPreviewModal';
 import KycPolicyModal from './ui/KycPolicyModal';
+import ImageCropperModal from './ui/ImageCropperModal';
 import DocumentViewer from '@/components/ui/DocumentViewer';
+import KycStatusAlert from './ui/KycStatusAlert';
 
 const STEPS = ['Proof of Identity', 'Proof of address', 'Upload Document'];
 
@@ -26,9 +29,21 @@ interface KycContainerProps {
         DOCUMENT_TYPES: { value: string, label: string }[];
         MAJOR_BANKS: string[];
     };
+    isAdmin?: boolean;
+    isEditing?: boolean;
+    onEdit?: () => void;
+    isViewing?: boolean;
+    onView?: () => void;
+    isSubmittingSuccess?: boolean;
+    kycStatusReason?: string;
 }
 
-const KycContainer: React.FC<KycContainerProps> = ({ user, initialData, onSuccess, onBack, config }) => {
+const KycContainer: React.FC<KycContainerProps> = ({
+    user, initialData, onSuccess, onBack, config,
+    isAdmin = false, isEditing: isEditingProp, onEdit,
+    isViewing = false, onView,
+    isSubmittingSuccess = false, kycStatusReason = ''
+}) => {
     const router = useRouter();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -38,16 +53,18 @@ const KycContainer: React.FC<KycContainerProps> = ({ user, initialData, onSucces
 
     const [form, setForm] = useState({
         dob: '', documentType: '', documentNumber: '',
-        bankName: '', ifsc: '', accountNo: '', confirmAccountNo: '', 
+        bankName: '', ifsc: '', accountNo: '', confirmAccountNo: '',
         agreedStep1: false, agreedStep2: false, agreedFinal: false,
     });
 
     const [files, setFiles] = useState<Record<string, File | string | null>>({
-        idCardFront: null, idCardBack: null, bankPassbook: null,
+        idCardFront: null, idCardBack: null, bankPassbook: null, profilePicture: null
     });
 
+    const [cropper, setCropper] = useState<{ open: boolean, imageSrc: string }>({ open: false, imageSrc: '' });
+
     const [errors, setErrors] = useState<Record<string, string>>({});
-    
+
     const [activePreview, setActivePreview] = useState<{ file?: File, url: string, type: 'image' | 'pdf' } | null>(null);
     const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false);
 
@@ -67,6 +84,7 @@ const KycContainer: React.FC<KycContainerProps> = ({ user, initialData, onSucces
                 idCardFront: initialData.idCardFront || null,
                 idCardBack: initialData.idCardBack || null,
                 bankPassbook: initialData.bankPassbook || null,
+                profilePicture: initialData.profilePicture || null,
             });
             setActiveStep(2);
         }
@@ -92,13 +110,26 @@ const KycContainer: React.FC<KycContainerProps> = ({ user, initialData, onSucces
         setFiles(p => ({ ...p, [key]: null }));
     };
 
+    const handleProfilePicSelect = (file: File) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            setCropper({ open: true, imageSrc: reader.result as string });
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleCropComplete = (croppedBlob: Blob) => {
+        const file = new File([croppedBlob], "profile_picture.jpg", { type: "image/jpeg" });
+        setFiles(p => ({ ...p, profilePicture: file }));
+    };
+
     const handlePreviewFile = async (fileOrPublicId: File | string) => {
         if (!fileOrPublicId) return;
-        
+
         if (typeof fileOrPublicId === 'string') {
             const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
             const url = `${baseUrl}/kyc/files/${fileOrPublicId}`;
-            
+
             const hasExtension = fileOrPublicId.includes('.');
             if (hasExtension) {
                 setActivePreview({ url, type: fileOrPublicId.toLowerCase().endsWith('.pdf') ? 'pdf' : 'image' });
@@ -138,7 +169,7 @@ const KycContainer: React.FC<KycContainerProps> = ({ user, initialData, onSucces
             if (!form.agreedStep1) newErrs.agreedStep1 = "Required";
             if (Object.keys(newErrs).length > 0) { setErrors(newErrs); return; }
         }
-        
+
         if (activeStep === 1) {
             const newErrs: Record<string, string> = {};
             if (!files.idCardFront) newErrs.idCardFront = "Required";
@@ -156,8 +187,8 @@ const KycContainer: React.FC<KycContainerProps> = ({ user, initialData, onSucces
     const handleBack = (e?: React.MouseEvent) => {
         if (e) e.preventDefault();
         if (activeStep === 0) onBack();
-        else { 
-            setActiveStep(s => s - 1); 
+        else {
+            setActiveStep(s => s - 1);
             const container = document.getElementById('kyc-scroll-container');
             if (container) container.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -176,53 +207,47 @@ const KycContainer: React.FC<KycContainerProps> = ({ user, initialData, onSucces
         if (files.idCardFront instanceof File) fd.append('idCardFront', files.idCardFront);
         if (files.idCardBack instanceof File) fd.append('idCardBack', files.idCardBack);
         if (files.bankPassbook instanceof File) fd.append('bankPassbook', files.bankPassbook);
-        
-        try { 
-            await submitKyc(fd).unwrap(); 
+        if (files.profilePicture instanceof File) fd.append('profilePicture', files.profilePicture);
+
+        try {
+            await submitKyc(fd).unwrap();
             onSuccess();
         } catch { /* error handled by UI */ }
     };
 
-    // Removing this so we can show the status after success
-    // if (isSuccess) return null;
 
     const renderStepContent = (step: number) => {
         switch (step) {
             case 0: return <IdentityStep userName={user?.name || ''} form={form} errors={errors} onFieldChange={handleFieldChange} config={config} />;
-            case 1: return <UploadStep files={files} errors={errors} onFileSelect={handleFileSelect} onRemoveFile={handleRemoveFile} onPreviewFile={handlePreviewFile} agreed={form.agreedStep2} onAgreedChange={(v) => handleFieldChange('agreedStep2', v)} />;
-            case 2: return <ReviewStep isReviewOnly={!!initialData} user={user} form={form} files={files} errors={errors} onPreviewFile={handlePreviewFile} onOpenPolicy={() => setIsPolicyModalOpen(true)} onAgreedChange={(v) => handleFieldChange('agreedFinal', v)} config={config} />;
+            case 1: return <UploadStep files={files} errors={errors} onFileSelect={handleFileSelect} onProfilePicSelect={handleProfilePicSelect} onRemoveFile={handleRemoveFile} onPreviewFile={handlePreviewFile} agreed={form.agreedStep2} onAgreedChange={(v) => handleFieldChange('agreedStep2', v)} />;
+            case 2: return <ReviewStep isReviewOnly={!!initialData} status={kycStatus} user={user} form={form} files={files} errors={errors} onPreviewFile={handlePreviewFile} onOpenPolicy={() => setIsPolicyModalOpen(true)} onAgreedChange={(v) => handleFieldChange('agreedFinal', v)} config={config} />;
             default: return null;
         }
     };
 
-    const isSubmitted = !!initialData;
+    const kycStatus = initialData?.kycStatus?.toLowerCase() || 'none';
+    const isReturned = kycStatus === 'returned';
+    const isRejected = kycStatus === 'rejected';
+    const isApproved = kycStatus === 'approved';
+    const isPending = kycStatus === 'pending' || kycStatus === 'resubmitted';
+
+
+    const isSubmitted = !!initialData && kycStatus !== 'none';
+
+    const isEditing = isEditingProp !== undefined ? isEditingProp : (!isSubmitted);
 
     return (
-        <Card variant="outlined" sx={{ 
-            height: { xs: 'auto', md: 'calc(100vh - 160px)' },
+        <Card variant="outlined" sx={{
+            height: { xs: 'auto', md: 'calc(100vh - 200px)' },
             minHeight: { md: 600 },
             overflow: 'hidden',
             display: 'flex',
             flexDirection: 'column',
         }}>
             <Box sx={{ flexShrink: 0, zIndex: 10 }}>
-                {/* Header / Breadcrumbs */}
-                <Box sx={{ px: { xs: 4, md: 8 }, pt: 4, pb: isSubmitted ? 4 : 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Breadcrumbs separator={<NavigateNextIcon fontSize="small" />} sx={{ '& .MuiBreadcrumbs-separator': { mx: 1 } }}>
-                        <Typography variant="body2" fontWeight={500} color="text.secondary">KYC form</Typography>
-                        <Typography variant="body2" fontWeight={800} color="text.primary">
-                            {isSubmitted ? "Submitted Details" : STEPS[activeStep]}
-                        </Typography>
-                    </Breadcrumbs>
-                    <IconButton onClick={onBack} size="small" sx={{ bgcolor: 'action.hover' }}>
-                        <ArrowBackIcon fontSize="small" />
-                    </IconButton>
-                </Box>
-
-                {!isSubmitted && (
+                {!isAdmin && isEditing && (
                     <>
-                        {/* Stepper (Horizontal) */}
-                        <Box sx={{ px: { xs: 4, md: 8, lg: 12 }, pt: 1, pb: 4 }}>
+                        <Box sx={{ px: { xs: 4, md: 8, lg: 12 }, pt: 4, pb: 4 }}>
                             <Stepper activeStep={activeStep} alternativeLabel sx={{
                                 '& .MuiStepLabel-label': { mt: 1, fontWeight: 700, fontSize: '0.75rem', opacity: 0.6 },
                                 '& .MuiStepLabel-label.Mui-active': { opacity: 1 },
@@ -241,20 +266,18 @@ const KycContainer: React.FC<KycContainerProps> = ({ user, initialData, onSucces
                 )}
             </Box>
 
-            {/* Main Content Split Area */}
             <Box sx={{ flexGrow: 1, display: 'flex', overflow: 'hidden' }}>
-                {/* Left Column: Form Content */}
-                <Box id="kyc-scroll-container" sx={{ 
-                    flex: activePreview ? { md: '0 0 35%', lg: '0 0 30%' } : '1 1 100%', 
-                    overflowY: 'auto', 
+                <Box id="kyc-scroll-container" sx={{
+                    flex: activePreview ? { md: '0 0 35%', lg: '0 0 30%' } : '1 1 100%',
+                    overflowY: 'auto',
                     display: 'flex',
                     flexDirection: 'column',
                     transition: 'all 0.3s ease',
                     borderRight: activePreview ? '1px solid rgba(255,255,255,0.05)' : 'none',
                     alignItems: 'center',
                 }}>
-                    <Box sx={{ 
-                        width: '100%', 
+                    <Box sx={{
+                        width: '100%',
                         maxWidth: activePreview ? '100%' : '800px',
                         display: 'flex',
                         flexDirection: 'column',
@@ -262,78 +285,165 @@ const KycContainer: React.FC<KycContainerProps> = ({ user, initialData, onSucces
                         transition: 'max-width 0.3s ease'
                     }}>
                         <Box sx={{ p: { xs: 4, md: activePreview ? 4 : 6, lg: activePreview ? 4 : 8 }, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                        <Box sx={{ flexGrow: 1 }}>
-                            {isSubmitted && (
-                                <Alert 
-                                    severity={initialData?.kycStatus?.toLowerCase() === 'approved' ? 'success' : 'info'} 
-                                    icon={initialData?.kycStatus?.toLowerCase() === 'approved' ? undefined : <DocIcon />}
-                                    sx={{ 
-                                        mb: 6, 
-                                        py: 2,
-                                        '& .MuiAlert-message': { width: '100%' }
-                                    }}
-                                >
-                                    <Typography variant="subtitle2" fontWeight={900}>
-                                        {initialData?.kycStatus?.toLowerCase() === 'approved' ? 'KYC Verification Successful' : 'KYC Under Verification'}
-                                    </Typography>
-                                    <Typography variant="body2" sx={{ opacity: 0.8, mt: 0.5 }}>
-                                        {initialData?.kycStatus?.toLowerCase() === 'approved' 
-                                            ? 'Your account is fully verified. You can now access all premium features.' 
-                                            : 'We are currently reviewing your documents. You will be notified via email once the process is complete.'}
-                                    </Typography>
-                                </Alert>
+                            {!isEditing && !isSubmittingSuccess && (
+                                <KycStatusAlert
+                                    status={kycStatus}
+                                    reason={kycStatusReason || initialData?.reason}
+                                />
                             )}
-                            {submitError && (
-                                <Alert severity="error" sx={{ mb: 4, borderRadius: 2 }}>
-                                    {'data' in submitError ? (submitError.data as any).message : 'Submission failed.'}
-                                </Alert>
-                            )}
-                            {renderStepContent(activeStep)}
-                        </Box>
 
-                        {!isSubmitted && (
-                            <>
-                                {/* Navigation Buttons */}
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 8, pt: 4, borderTop: '1px solid', borderColor: 'divider' }}>
-                                    <ButtonWithIcon 
-                                        text="Go Back" 
-                                        icon={ArrowBackIcon} 
-                                        side="left" 
-                                        onClick={handleBack} 
-                                        disabled={activeStep === 0 && !initialData} 
-                                        variant="text"
-                                        sx={{ color: 'text.secondary', fontWeight: 700 }}
-                                    />
-                                    {activeStep === STEPS.length - 1 ? (
-                                        !initialData && (
-                                            <ButtonWithIcon 
-                                                text={isSubmitting ? "Submitting..." : "Submit Application"} 
-                                                icon={SendIcon} 
-                                                onClick={handleSubmit} 
+                            {isSubmittingSuccess && (
+                                <Alert
+                                    severity="success"
+                                    sx={{ mb: 4, borderRadius: 2 }}
+                                    icon={<SendIcon />}
+                                >
+                                    <Typography variant="subtitle2" fontWeight={900}>Application Submitted Successfully</Typography>
+                                    <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                                        Your documents are now being reviewed. We'll notify you once the process is complete.
+                                    </Typography>
+                                </Alert>
+                            )}
+
+                            {isEditing ? (
+                                renderStepContent(activeStep)
+                            ) : (
+                                <Box sx={{ py: 4 }}>
+                                    {!isAdmin && !isViewing && !isEditing && (
+                                        <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', mb: 4 }}>
+
+                                            {isReturned && (
+                                                <Button
+                                                    variant="contained"
+                                                    onClick={onEdit}
+                                                    sx={{ borderRadius: 2, fontWeight: 800, px: 4, py: 1.5 }}
+                                                >
+                                                    Edit Application
+                                                </Button>
+                                            )}
+                                            {isApproved && (
+                                                <ButtonWithIcon
+                                                    text="Update KYC Details (Re-eKYC)"
+                                                    icon={EditIcon}
+                                                    onClick={onEdit}
+                                                    needAnimation={false}
+                                                    variant="outlined"
+                                                    color="primary"
+                                                />
+                                            )}
+                                            {isPending && (
+                                                <Button
+                                                    variant="outlined"
+                                                    onClick={onView}
+                                                    sx={{ borderRadius: 2, fontWeight: 800, px: 4, py: 1.5 }}
+                                                >
+                                                    View Application
+                                                </Button>
+                                            )}
+                                        </Box>
+                                    )}
+
+                                    {(isViewing || (!isAdmin && isApproved)) && renderStepContent(2)}
+
+                                    {isAdmin && (isPending || isApproved) && renderStepContent(2)}
+                                </Box>
+                            )}
+
+                            {isEditing && !isAdmin && (
+                                <>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 8, pt: 4, borderTop: '1px solid', borderColor: 'divider' }}>
+                                        <ButtonWithIcon
+                                            text="Go Back"
+                                            icon={ArrowBackIcon}
+                                            side="left"
+                                            onClick={handleBack}
+                                            disabled={activeStep === 0}
+                                            variant="text"
+                                            sx={{ color: 'text.secondary', fontWeight: 700 }}
+                                        />
+                                        {activeStep === STEPS.length - 1 ? (
+                                            <ButtonWithIcon
+                                                text={isSubmitting ? "Submitting..." : "Submit Application"}
+                                                icon={SendIcon}
+                                                onClick={handleSubmit}
+                                                loading={isSubmitting}
                                                 disabled={isSubmitting}
                                                 variant="contained"
                                             />
-                                        )
-                                    ) : (
-                                        <ButtonWithIcon 
-                                            text="Submit And Next" 
-                                            icon={ArrowForwardIcon} 
-                                            onClick={handleNext} 
-                                            variant="contained"
-                                        />
-                                    )}
-                                </Box>
-                            </>
-                        )}
-                        </Box> 
-                    </Box> 
-                </Box> 
+                                        ) : (
+                                            <ButtonWithIcon
+                                                text="Submit And Next"
+                                                icon={ArrowForwardIcon}
+                                                onClick={handleNext}
+                                                variant="contained"
+                                            />
+                                        )}
+                                    </Box>
+                                </>
+                            )}
 
-                {/* Right Column: Preview Area */}
-                <Box sx={{ 
-                    flex: activePreview ? { md: '0 0 65%', lg: '0 0 70%' } : '0 0 0%', 
+                            {initialData?.history && initialData.history.length > 0 && !isEditing && !isViewing && !isApproved && (
+                                <Box sx={{ mt: 8, pt: 6, borderTop: '1px solid', borderColor: alpha(theme.palette.divider, 0.08) }}>
+                                    <Typography variant="h6" fontWeight={900} sx={{ mb: 4, letterSpacing: '-0.02em' }}>
+                                        Application History
+                                    </Typography>
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                                        {initialData.history.map((h: any, i: number) => (
+                                            <Box key={i} sx={{
+                                                display: 'flex', gap: 2.5,
+                                                position: 'relative',
+                                                '&::before': i !== initialData.history.length - 1 ? {
+                                                    content: '""',
+                                                    position: 'absolute',
+                                                    left: 11, top: 24, bottom: -24,
+                                                    width: 2,
+                                                    bgcolor: 'divider',
+                                                    opacity: 0.5
+                                                } : {}
+                                            }}>
+                                                <Box sx={{
+                                                    width: 24, height: 24, borderRadius: '50%',
+                                                    bgcolor: h.status === 'approved' ? 'success.main' : h.status === 'rejected' ? 'error.main' : 'primary.main',
+                                                    flexShrink: 0, mt: 0.5,
+                                                    zIndex: 1
+                                                }} />
+                                                <Box>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
+                                                        <Typography variant="body2" fontWeight={800} sx={{ textTransform: 'capitalize' }}>
+                                                            {h.status}
+                                                        </Typography>
+                                                        <Typography variant="caption" color="text.secondary" sx={{ opacity: 0.6 }}>
+                                                            {new Date(h.createdAt).toLocaleString()}
+                                                        </Typography>
+                                                    </Box>
+                                                    {h.reason && (
+                                                        <Typography variant="body2" color="text.secondary" sx={{
+                                                            ...BOX_VARIANTS['surface-flat'],
+                                                            background: alpha(theme.palette.text.primary, 0.03),
+                                                            p: 2, borderRadius: 2, mt: 1,
+                                                            borderLeft: '4px solid', borderColor: alpha(theme.palette.divider, 0.2),
+                                                            fontSize: '0.85rem'
+                                                        }}>
+                                                            {h.reason}
+                                                        </Typography>
+                                                    )}
+                                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1, opacity: 0.5 }}>
+                                                        By: {h.actionByName} ({h.actionByRole})
+                                                    </Typography>
+                                                </Box>
+                                            </Box>
+                                        ))}
+                                    </Box>
+                                </Box>
+                            )}
+                        </Box>
+                    </Box>
+                </Box>
+
+                <Box sx={{
+                    flex: activePreview ? { md: '0 0 65%', lg: '0 0 70%' } : '0 0 0%',
                     width: activePreview ? { md: '65%', lg: '70%' } : '0%',
-                    bgcolor: '#1a1d17', 
+                    bgcolor: '#1a1d17',
                     display: { xs: 'none', md: activePreview ? 'flex' : 'none' },
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -342,11 +452,11 @@ const KycContainer: React.FC<KycContainerProps> = ({ user, initialData, onSucces
                     transition: 'all 0.3s ease',
                     overflow: 'hidden'
                 }}>
-                    <DocumentViewer 
-                        documents={activePreview ? [{ uri: activePreview.url, fileName: activePreview.file?.name, fileType: activePreview.type }] : []} 
+                    <DocumentViewer
+                        documents={activePreview ? [{ uri: activePreview.url, fileName: activePreview.file?.name, fileType: activePreview.type }] : []}
                     />
                     {activePreview && (
-                        <IconButton 
+                        <IconButton
                             onClick={() => setActivePreview(null)}
                             sx={{ position: 'absolute', top: 20, right: 20, bgcolor: 'rgba(0,0,0,0.5)', color: '#fff', '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' }, zIndex: 10 }}
                             size="small"
@@ -357,20 +467,26 @@ const KycContainer: React.FC<KycContainerProps> = ({ user, initialData, onSucces
                 </Box>
             </Box>
 
-            {/* Mobile Preview Modal */}
-            <KycPreviewModal 
-                open={Boolean(activePreview) && isMobile} 
-                onClose={() => setActivePreview(null)} 
-                previewFile={activePreview} 
+            <KycPreviewModal
+                open={Boolean(activePreview) && isMobile}
+                onClose={() => setActivePreview(null)}
+                previewFile={activePreview}
             />
 
-            {/* Policy Modal */}
-            <KycPolicyModal 
-                open={isPolicyModalOpen} 
-                onClose={() => setIsPolicyModalOpen(false)} 
-                policyText={policyData?.policy || (policyData as any)?.data?.policy || ''} 
-                isLoading={isLoadingPolicy} 
-                onAccept={() => handleFieldChange('agreedFinal', true)} 
+            <KycPolicyModal
+                open={isPolicyModalOpen}
+                onClose={() => setIsPolicyModalOpen(false)}
+                policyText={policyData?.policy || (policyData as any)?.data?.policy || ''}
+                isLoading={isLoadingPolicy}
+                onAccept={() => handleFieldChange('agreedFinal', true)}
+            />
+
+            <ImageCropperModal
+                open={cropper.open}
+                imageSrc={cropper.imageSrc}
+                onClose={() => setCropper({ ...cropper, open: false })}
+                onCropComplete={handleCropComplete}
+                aspectRatio={1}
             />
         </Card>
     );

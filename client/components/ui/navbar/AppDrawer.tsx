@@ -35,6 +35,8 @@ interface AppDrawerProps {
     onClose: () => void;
     anchor?: 'left' | 'right';
     user: any;
+    kycStatus?: string;
+    kycData?: any;
     categories: NavCategory[];
 }
 
@@ -43,6 +45,8 @@ const AppDrawer: React.FC<AppDrawerProps> = ({
     onClose,
     anchor = 'left',
     user,
+    kycStatus,
+    kycData,
     categories
 }) => {
     const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
@@ -88,7 +92,7 @@ const AppDrawer: React.FC<AppDrawerProps> = ({
             {/* Profile Section */}
             <Box sx={{ p: 2, bgcolor: 'rgba(0,0,0,0.02)' }}>
                 {user ? (
-                    <UserProfile user={user} position="left" />
+                    <UserProfile user={user} kycStatus={kycStatus} kycData={kycData} position="left" />
                 ) : (
                     <Typography variant="body2" color="text.secondary">
                         Welcome! Please sign in to access more features.

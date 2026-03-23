@@ -14,4 +14,5 @@ var KycStatus;
     KycStatus["APPROVED"] = "approved";
     KycStatus["REJECTED"] = "rejected";
     KycStatus["RESUBMITTED"] = "resubmitted";
+    KycStatus["RETURNED"] = "returned";
 })(KycStatus || (exports.KycStatus = KycStatus = {}));

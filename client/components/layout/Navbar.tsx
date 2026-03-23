@@ -16,7 +16,7 @@ import { RootState } from "@/store";
 import { logout } from "@/store/slices/auth.slice";
 import { useLogoutMutation } from "@/store/api/auth.api";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import HomeIcon from '@mui/icons-material/Home';
 import InfoOutlineIcon from '@mui/icons-material/InfoOutline';
 import MiscellaneousServicesIcon from '@mui/icons-material/MiscellaneousServices';
@@ -37,6 +37,9 @@ const Navbar = () => {
     const searchParams = useSearchParams();
     const [desktopDrawerOpen, setDesktopDrawerOpen] = useState(false);
     const [serverLogout] = useLogoutMutation();
+    const currentKycStatus = user?.kycStatus;
+    const currentKycData = user?.kycData;
+
 
     const [isTriggeringModal, setIsTriggeringModal] = useState(false);
 
@@ -96,7 +99,7 @@ const Navbar = () => {
                 action: () => handleNavigate(link.href)
             }))
         },
-        ...(isAuthenticated ? [{
+        ...(isAuthenticated && user?.role !== 'admin' ? [{
             title: 'Profile',
             items: [
                 { id: 'kyc', label: 'Update KYC', icon: BadgeIcon, action: handleKYC },
@@ -134,12 +137,15 @@ const Navbar = () => {
                             {isAuthenticated ? (
                                 <>
                                     <Box onClick={toggleDesktopDrawer(true)} sx={{ cursor: 'pointer' }}>
-                                        <UserProfile user={user} />
+                                        <UserProfile user={user} kycStatus={currentKycStatus} kycData={currentKycData} />
                                     </Box>
                                     <AppDrawer
                                         open={desktopDrawerOpen}
                                         onClose={toggleDesktopDrawer(false)}
                                         user={user}
+                                        kycStatus={currentKycStatus}
+                                        kycData={currentKycData}
+
                                         categories={categories}
                                         anchor="right"
                                     />
@@ -173,6 +179,7 @@ const Navbar = () => {
                         <MobileNav
                             isAuthenticated={isAuthenticated}
                             user={user}
+                            kycStatus={currentKycStatus}
                             navLinks={navLinks}
                             onLogout={handleLogout}
                             onDashboard={handleDashboard}

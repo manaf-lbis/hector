@@ -1,0 +1,16 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const user_repo_1 = require("./user.repo");
+const user_services_1 = require("./user.services");
+const user_controller_1 = require("./user.controller");
+const auth_middleware_1 = require("../../shared/middleware/auth.middleware");
+const types_1 = require("../user/types");
+const router = (0, express_1.Router)();
+const userRepo = new user_repo_1.UserRepo();
+const userService = new user_services_1.UserService(userRepo);
+const userController = new user_controller_1.UserController(userService);
+router.get('/all', auth_middleware_1.authMiddleware, (0, auth_middleware_1.roleMiddleware)([types_1.Roles.admin]), userController.getAllUsers.bind(userController));
+router.get('/:id', auth_middleware_1.authMiddleware, (0, auth_middleware_1.roleMiddleware)([types_1.Roles.admin]), userController.getUserById.bind(userController));
+router.get('/logs/:userId', auth_middleware_1.authMiddleware, (0, auth_middleware_1.roleMiddleware)([types_1.Roles.admin]), userController.getLoginLogs.bind(userController));
+exports.default = router;

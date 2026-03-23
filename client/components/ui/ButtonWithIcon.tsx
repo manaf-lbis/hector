@@ -1,6 +1,6 @@
 import { BRAND } from "@/app/theme";
 import React from "react";
-import { Button, Box, Typography, alpha } from "@mui/material";
+import { Button, Box, Typography, alpha, CircularProgress } from "@mui/material";
 import NorthEastIcon from "@mui/icons-material/NorthEast";
 import { SvgIconComponent } from "@mui/icons-material";
 
@@ -15,6 +15,7 @@ interface Props {
     textColor?: 'primary' | 'secondary' | 'black' | 'white' | 'error';
     onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
     disabled?: boolean;
+    loading?: boolean;
     sx?: any;
 }
 
@@ -29,6 +30,7 @@ const ButtonWithIcon = ({
     textColor,
     onClick,
     disabled = false,
+    loading = false,
     sx = {}
 }: Props) => {
 
@@ -112,9 +114,13 @@ const ButtonWithIcon = ({
                     justifyContent: "center",
                     flexShrink: 0,
                     transition: "transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
-                    ".MuiButton-root:hover &": { transform: needAnimation ? "rotate(45deg)" : "none" },
+                    ".MuiButton-root:hover &": { transform: (needAnimation && !loading) ? "rotate(45deg)" : "none" },
                 }}>
-                    <Icon sx={{ fontSize: "120%" }} />
+                    {loading ? (
+                        <CircularProgress size={16} color="inherit" thickness={6} />
+                    ) : (
+                        <Icon sx={{ fontSize: "120%" }} />
+                    )}
                 </Box>
             )}
         </Button>

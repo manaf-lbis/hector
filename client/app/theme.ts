@@ -180,6 +180,30 @@ export const BOX_VARIANTS = {
             boxShadow: `0 16px 48px ${alpha(BRAND.secondary[500], 0.5)}`,
         },
     },
+    "surface-outlined": {
+        background: alpha(BRAND.white, 0.6),
+        borderRadius: "12px",
+        border: `1px solid ${alpha(BRAND.primary[600], 0.1)}`,
+        transition: "all 0.2s ease",
+        "&:hover": { 
+            borderColor: alpha(BRAND.primary[600], 0.3),
+            background: alpha(BRAND.white, 0.8),
+            boxShadow: `0 4px 12px ${alpha(BRAND.inkDark, 0.04)}`
+        },
+    },
+    "surface-review-item": {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '16px',
+        borderRadius: '12px',
+        border: `1px solid ${alpha(BRAND.primary[600], 0.1)}`,
+        transition: 'all 0.2s ease',
+        '&:hover': {
+            background: alpha(BRAND.primary[600], 0.02),
+            borderColor: alpha(BRAND.primary[600], 0.3),
+        }
+    },
 } as const;
 
 export type BoxVariant = keyof typeof BOX_VARIANTS;
@@ -401,7 +425,7 @@ export const theme = createTheme({
             styleOverrides: {
                 root: {
                     ...glass.primary,
-                    borderRadius: 16,
+                    borderRadius: 12,
                     transition: "transform 0.25s ease, box-shadow 0.25s ease",
                     "&:hover": {
                         transform: "translateY(-3px)",
@@ -732,7 +756,7 @@ export const theme = createTheme({
         // ── ALERT ───────────────────────────────────────────────────────────────
         MuiAlert: {
             styleOverrides: {
-                root: { borderRadius: 14, backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" },
+                root: { borderRadius: 12, backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" },
                 standardSuccess: { background: alpha(BRAND.primary[600], 0.08), border: `1px solid ${alpha(BRAND.primary[500], 0.3)}`, color: BRAND.primary[700] },
                 standardWarning: { background: alpha("#F59E0B", 0.08), border: `1px solid ${alpha("#F59E0B", 0.3)}` },
                 standardError: { background: alpha("#EF4444", 0.08), border: `1px solid ${alpha("#EF4444", 0.3)}` },

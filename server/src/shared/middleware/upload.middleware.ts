@@ -27,5 +27,6 @@ export const kycUpload = multer({
 }).fields([
     { name: 'idCardFront', maxCount: 1 },
     { name: 'idCardBack', maxCount: 1 },
-    { name: 'bankPassbook', maxCount: 1 }
+    { name: 'bankPassbook', maxCount: 1 },
+    { name: 'profilePicture', maxCount: 1 }
 ]);

@@ -7,7 +7,8 @@ export interface TokenPayload {
     userId: Types.ObjectId;
     phone?: string
     email?: string;
-    role?: Roles
+    role?: Roles;
+    name?: string;
 }
 
 interface Tokens {

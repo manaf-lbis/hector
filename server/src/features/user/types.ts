@@ -19,6 +19,8 @@ export interface IUser extends Document {
     status: UserStatus;
     refreshToken?: string;
     kyc:Types.ObjectId;
+    customId: string;
+    lastLogin?: Date;
     createdAt?: Date;
     updatedAt?: Date;
 }

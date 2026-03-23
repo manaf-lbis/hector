@@ -18,8 +18,6 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({ documents }) => {
             setBlobUrl(null);
             return;
         }
-
-        // Only fetch as blob if it's a remote URL from our API
         if (doc.uri.startsWith('http')) {
             setLoading(true);
             setError(null);
@@ -87,7 +85,6 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({ documents }) => {
                     </Typography>
                 </Box>
             ) : isImage ? (
-                /* eslint-disable-next-line @next/next/no-img-element */
                 <img
                     src={blobUrl || doc.uri}
                     alt={doc.fileName || 'Document'}

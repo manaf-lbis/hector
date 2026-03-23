@@ -100,6 +100,9 @@ const kycSchema = new mongoose_1.Schema({
         enum: Object.values(types_1.KycStatus),
         default: types_1.KycStatus.PENDING
     },
+    reason: {
+        type: String
+    },
     approvedOn: {
         type: Date
     },

@@ -78,6 +78,8 @@ export class AuthController {
                 otpId: tokenPayload.otpId!,
                 name: tokenPayload.name!,
                 phone: tokenPayload.phone!,
+                ip: req.ip,
+                userAgent: req.headers['user-agent'] as string
             })
 
             res.clearCookie('authToken');
@@ -104,7 +106,13 @@ export class AuthController {
             const tokenPayload = verifyAuthToken(signupToken);
             if (!tokenPayload) throw new ApiError('Session invalid')
 
-            const result = await this._authService.verifyLogin({ otp, email: tokenPayload.email!, otpId: tokenPayload.otpId! });
+            const result = await this._authService.verifyLogin({ 
+                otp, 
+                email: tokenPayload.email!, 
+                otpId: tokenPayload.otpId!,
+                ip: req.ip,
+                userAgent: req.headers['user-agent'] as string
+            });
 
             res.clearCookie('authToken');
             await this._setTokens({ res, accessToken: result.accessToken, refreshToken: result.refreshToken });

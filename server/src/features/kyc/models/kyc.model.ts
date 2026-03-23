@@ -60,10 +60,16 @@ const kycSchema = new Schema<IKyc>({
         type: String,
         required: [true, "Bank passbook image is required"]
     },
+    profilePicture: {
+        type: String
+    },
     kycStatus: {
         type: String,
         enum: Object.values(KycStatus),
         default: KycStatus.PENDING
+    },
+    reason: {
+        type: String
     },
     approvedOn: {
         type: Date
@@ -71,7 +77,15 @@ const kycSchema = new Schema<IKyc>({
     approvedBy: {
         type: Schema.Types.ObjectId,
         ref: 'User'
-    }
+    },
+    history: [{
+        status: { type: String, enum: Object.values(KycStatus) },
+        actionBy: { type: Schema.Types.ObjectId, ref: 'User' },
+        actionByName: String,
+        actionByRole: String,
+        reason: String,
+        createdAt: { type: Date, default: Date.now }
+    }]
 }, {
     timestamps: true
 });

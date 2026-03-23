@@ -55,22 +55,29 @@ class OtpService {
         const isExist = await this._otpRepo.findOne({ email, purpose: types_1.OtpPurpose.signup });
         const now = new Date();
         if (isExist && (0, date_fns_1.isAfter)(isExist.windowExpiresAt, now)) {
-            if ((0, date_fns_1.isAfter)(isExist.expiresAt, now)) {
-                const timeRemaining = (0, date_fns_1.formatDistanceToNow)(isExist.expiresAt);
-                const secondsLeft = (0, date_fns_1.differenceInSeconds)(isExist.expiresAt, now);
-                throw new api_error_1.default(`Active session found. Please try again in ${timeRemaining} (${secondsLeft}s).`, 400);
+            const secondsSinceUpdate = (0, date_fns_1.differenceInSeconds)(now, isExist.resendedAt);
+            const resendLimit = Number(process.env.OTP_RESEND_SEC) || 60;
+            const maxResend = Number(process.env.MAX_OTP_RESEND_COUNT) || 3;
+            if (secondsSinceUpdate < resendLimit) {
+                throw new api_error_1.default(`Please wait ${resendLimit - secondsSinceUpdate}s before requesting a new code.`, 400);
+            }
+            if (isExist.resendCount >= maxResend) {
+                const timeRemaining = (0, date_fns_1.formatDistanceToNow)(isExist.windowExpiresAt);
+                throw new api_error_1.default(`Maximum resend attempts reached for this session. Please try again ${timeRemaining}.`, 400);
             }
         }
         const { otpHash } = await this.generateOtpHash(email);
         const windowDuration = 15 * 60 * 1000;
         const codeDuration = Number(process.env.OTP_EXPIRY_SEC) * 1000;
-        return await this._otpRepo.create({
-            email,
+        const otpData = await this._otpRepo.upsert({ email, purpose: types_1.OtpPurpose.signup }, {
             otpHash,
-            purpose: types_1.OtpPurpose.signup,
+            attempts: 0,
+            resendCount: (isExist && (0, date_fns_1.isAfter)(isExist.windowExpiresAt, now)) ? isExist.resendCount + 1 : 0,
+            resendedAt: now,
             expiresAt: new Date(now.getTime() + codeDuration),
-            windowExpiresAt: isExist && (0, date_fns_1.isAfter)(isExist.windowExpiresAt, now) ? isExist.windowExpiresAt : new Date(now.getTime() + windowDuration)
+            windowExpiresAt: (isExist && (0, date_fns_1.isAfter)(isExist.windowExpiresAt, now)) ? isExist.windowExpiresAt : new Date(now.getTime() + windowDuration),
         });
+        return otpData;
     }
     async validateOtp({ otpId, submittedOtp }) {
         const otpRecord = await this._otpRepo.findOne({ _id: otpId });
