@@ -1,12 +1,11 @@
 import AuthForm from "@/components/auth/AuthForm"
-
+import AuthLayout from "@/components/auth/AuthLayout"
 
 export default function LoginPage() {
     return (
-        <div>
+        <AuthLayout>
             <AuthForm type='login' />
-        </div>
-
+        </AuthLayout>
     )
 }
 

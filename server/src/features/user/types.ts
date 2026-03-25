@@ -10,6 +10,14 @@ export enum UserStatus {
     blocked = 'blocked'
 }
 
+export interface ILocation {
+    lat: number;
+    lng: number;
+    address?: string;
+    city?: string;
+    state?: string;
+}
+
 export interface IUser extends Document {
     _id: Types.ObjectId;
     name: string;
@@ -18,7 +26,10 @@ export interface IUser extends Document {
     role : Roles;
     status: UserStatus;
     refreshToken?: string;
+    location?: ILocation;
     kyc:Types.ObjectId;
+    customId: string;
+    lastLogin?: Date;
     createdAt?: Date;
     updatedAt?: Date;
 }

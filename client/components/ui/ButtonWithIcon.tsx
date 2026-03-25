@@ -1,6 +1,6 @@
 import { BRAND } from "@/app/theme";
 import React from "react";
-import { Button, Box, Typography, alpha } from "@mui/material";
+import { Button, Box, Typography, alpha, CircularProgress } from "@mui/material";
 import NorthEastIcon from "@mui/icons-material/NorthEast";
 import { SvgIconComponent } from "@mui/icons-material";
 
@@ -11,9 +11,12 @@ interface Props {
     needAnimation?: boolean;
     variant?: 'contained' | 'outlined' | 'text';
     size?: 'sm' | 'md' | 'lg' | { xs: 'sm' | 'md'; md: 'md' | 'lg'; lg?: 'lg' };
-    color?: 'primary' | 'secondary' | 'black' | 'white'; // Controls the BUTTON look
-    textColor?: 'primary' | 'secondary' | 'black' | 'white'; // Controls the TEXT only
-    onClick?: () => void;
+    color?: 'primary' | 'secondary' | 'black' | 'white' | 'error';
+    textColor?: 'primary' | 'secondary' | 'black' | 'white' | 'error';
+    onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
+    disabled?: boolean;
+    loading?: boolean;
+    sx?: any;
 }
 
 const ButtonWithIcon = ({
@@ -25,30 +28,32 @@ const ButtonWithIcon = ({
     size = 'md',
     color = 'primary',
     textColor,
-    onClick
+    onClick,
+    disabled = false,
+    loading = false,
+    sx = {}
 }: Props) => {
 
-    // 1. Theme strictly controls Backgrounds and Icons
     const themeMap = {
         primary: { bg: BRAND.primary[600], iconBg: BRAND.primary[400], iconColor: BRAND.white },
         secondary: { bg: BRAND.secondary[500], iconBg: BRAND.primary[600], iconColor: BRAND.secondary[500] },
         black: { bg: BRAND.inkDark, iconBg: BRAND.muted, iconColor: BRAND.white },
-        white: { bg: BRAND.white, iconBg: BRAND.lightBg, iconColor: BRAND.primary[600] }
+        white: { bg: BRAND.white, iconBg: BRAND.lightBg, iconColor: BRAND.primary[600] },
+        error: { bg: '#d32f2f', iconBg: '#b71c1c', iconColor: BRAND.white }
     };
 
-    // 2. Separate logic for Text Color
     const textMap = {
         primary: BRAND.primary[600],
         secondary: BRAND.secondary[500],
         black: BRAND.inkDark,
-        white: BRAND.white
+        white: BRAND.white,
+        error: '#d32f2f'
     };
 
     const theme = themeMap[color] || themeMap.primary;
-    
-    // If textColor prop is passed, use it; otherwise fallback to a sensible default (like white for contained, or black/primary for others)
-    const finalTextColor = textColor 
-        ? textMap[textColor] 
+
+    const finalTextColor = textColor
+        ? textMap[textColor]
         : (variant === 'contained' ? BRAND.white : textMap[color]);
 
     const config = {
@@ -65,13 +70,13 @@ const ButtonWithIcon = ({
             variant={variant}
             color="inherit"
             disableElevation
+            disabled={disabled}
             sx={{
                 height: typeof size === 'object' ? { xs: getStyles(size.xs).height, md: getStyles(size.md).height, lg: getStyles(size.lg || 'lg').height } : getStyles(size).height,
-                
-                // Now strictly controlled by the independent textColor logic
-                color: `${finalTextColor} !important`,
-                backgroundColor: variant === 'contained' ? `${theme.bg} !important` : "transparent !important",
-                
+
+                color: disabled ? 'rgba(255, 255, 255, 0.3) !important' : `${finalTextColor} !important`,
+                backgroundColor: disabled ? 'rgba(255, 255, 255, 0.05) !important' : (variant === 'contained' ? `${theme.bg} !important` : "transparent !important"),
+
                 ...(variant === 'outlined' ? {
                     background: alpha(theme.bg, 0.05),
                     backdropFilter: "blur(8px)",
@@ -87,9 +92,10 @@ const ButtonWithIcon = ({
                 gap: typeof size === 'object' ? { xs: getStyles(size.xs).gap, md: getStyles(size.md).gap } : getStyles(size).gap,
                 transition: "all 0.3s ease",
                 "&:hover": {
-                    transform: "translateY(-1px)",
-                    backgroundColor: variant === 'contained' ? alpha(theme.bg, 0.9) : alpha(theme.bg, 0.1),
-                }
+                    transform: disabled ? "none" : "translateY(-1px)",
+                    backgroundColor: disabled ? 'rgba(255, 255, 255, 0.05) !important' : (variant === 'contained' ? alpha(theme.bg, 0.9) : alpha(theme.bg, 0.1)),
+                },
+                ...sx
             }}
         >
             <Typography sx={{ fontWeight: 600, fontSize: "inherit", lineHeight: 1, whiteSpace: "nowrap", color: "inherit" }}>
@@ -101,7 +107,6 @@ const ButtonWithIcon = ({
                     width: typeof size === 'object' ? { xs: getStyles(size.xs).iconSize, md: getStyles(size.md).iconSize } : getStyles(size).iconSize,
                     height: typeof size === 'object' ? { xs: getStyles(size.xs).iconSize, md: getStyles(size.md).iconSize } : getStyles(size).iconSize,
                     borderRadius: "50%",
-                    // These remain tied to the theme, not the text color
                     backgroundColor: theme.iconBg,
                     color: theme.iconColor,
                     display: "flex",
@@ -109,9 +114,13 @@ const ButtonWithIcon = ({
                     justifyContent: "center",
                     flexShrink: 0,
                     transition: "transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
-                    ".MuiButton-root:hover &": { transform: needAnimation ? "rotate(45deg)" : "none" },
+                    ".MuiButton-root:hover &": { transform: (needAnimation && !loading) ? "rotate(45deg)" : "none" },
                 }}>
-                    <Icon sx={{ fontSize: "120%" }} />
+                    {loading ? (
+                        <CircularProgress size={16} color="inherit" thickness={6} />
+                    ) : (
+                        <Icon sx={{ fontSize: "120%" }} />
+                    )}
                 </Box>
             )}
         </Button>

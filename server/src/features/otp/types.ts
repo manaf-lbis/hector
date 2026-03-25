@@ -14,6 +14,7 @@ export interface IOtp extends Document {
   resendedAt: Date;
   resendCount: number;
   expiresAt: Date;
+  windowExpiresAt: Date;
   createdAt: Date;
   updatedAt: Date;
 }

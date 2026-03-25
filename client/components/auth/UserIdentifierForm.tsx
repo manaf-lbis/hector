@@ -49,12 +49,12 @@ export default function UserIdentifierForm({ type, formData, onChange, onSubmit,
   const handleClick = () => {
     setAttemptedSubmit(true);
     if (!hasError) {
-      onSubmit();  
+      onSubmit();
     }
   };
 
   return (
-    <Stack spacing={2.5}>
+    <Stack >
       {isSignup ? (
         <>
           <TextField

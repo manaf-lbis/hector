@@ -5,9 +5,7 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
-  // Override default ignores of eslint-config-next.
   {
-    // Define the files these rules apply to
     files: ["**/*.{ts,tsx}"],
     plugins: {
       "@typescript-eslint": tseslint,
@@ -19,7 +17,6 @@ const eslintConfig = defineConfig([
     },
   },
   globalIgnores([
-    // Default ignores of eslint-config-next:
     ".next/**",
     "out/**",
     "build/**",

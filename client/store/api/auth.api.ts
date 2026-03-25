@@ -49,6 +49,25 @@ export const authApi = createApi({
                 body,
             }),
         }),
+        getMe: builder.query<any, void>({
+            query: () => '/auth/me',
+            providesTags: ['User'],
+        }),
+        logout: builder.mutation<void, void>({
+            query: () => ({
+                url: '/auth/logout',
+                method: 'POST',
+            }),
+            invalidatesTags: ['User'],
+        }),
+        updateUserLocation: builder.mutation<any, { lat: number, lng: number, address?: string, city?: string, state?: string }>({
+            query: (body) => ({
+                url: '/users/me/location',
+                method: 'PUT',
+                body,
+            }),
+            invalidatesTags: ['User'],
+        }),
     }),
 });
 
@@ -59,4 +78,7 @@ export const {
     useVerifySignupOtpMutation,
     useResendSignupOtpMutation,
     useResendLoginOtpMutation,
+    useGetMeQuery,
+    useLogoutMutation,
+    useUpdateUserLocationMutation,
 } = authApi;
