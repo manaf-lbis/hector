@@ -5,6 +5,8 @@ import { IOtpService } from "../otp/interface/otp.service.interface";
 import { IUserService } from "../user/interface/user.services.interface";
 import { Roles } from "../user/types";
 import { IAuthService } from "./interface/auth.service.interface";
+import { sendEmail } from "../../shared/configs/email.cilent.config";
+import { welcomeTemplate } from "../../shared/templates/welcome.template";
 
 export class AuthService implements IAuthService {
     private readonly _OTP_RESEND_SEC = Number(process.env.OTP_RESEND_SEC)
@@ -23,6 +25,8 @@ export class AuthService implements IAuthService {
         if (user.status !== 'active') throw new ApiError('user is not Blocked')
 
         const result = await this._otpService.generateLoginOtp(user.email);
+
+
 
         const authToken = generateAuthToken({ otpId: result.otpId, email: user.email });
 
@@ -50,6 +54,12 @@ export class AuthService implements IAuthService {
 
         await this._otpService.validateOtp({ otpId, submittedOtp: otp });
         const user = await this._userService.createUser({ name, email, phone, role: Roles.user });
+        
+        try {
+            await sendEmail(user.email, "Welcome to Hector!", welcomeTemplate(user.name));
+        } catch (error) {
+            console.error("Failed to send welcome email:", error);
+        }
 
         const tokens = generateTokens({ userId: user._id, role: user.role, name: user.name });
 

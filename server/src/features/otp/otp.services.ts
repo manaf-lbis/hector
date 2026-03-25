@@ -2,6 +2,8 @@ import ApiError from "../../shared/utility/api.error";
 import { addSeconds, differenceInSeconds, formatDistanceToNow, isAfter } from 'date-fns';
 import { compareHash, createHash } from "../../shared/utility/hashing.utility";
 import { generateOTP } from "../../shared/utility/otp.utility";
+import { sendEmail } from "../../shared/configs/email.cilent.config";
+import { otpTemplate } from "../../shared/templates/otp.template";
 import { IOtpRepo } from "./interface/otp.repo.interface";
 import { IOtpService } from "./interface/otp.service.interface";
 import { IOtp, OtpPurpose } from "./types";
@@ -43,7 +45,10 @@ export class OtpService implements IOtpService {
             }
         }
 
-        const { otpHash } = await this.generateOtpHash(email);
+        const { rawOtp, otpHash } = await this.generateOtpHash(email);
+        
+        await sendEmail(email, "Your Hector Login Code", otpTemplate(rawOtp));
+
         const windowDuration = 15 * 60 * 1000;
         const codeDuration = Number(process.env.OTP_EXPIRY_SEC) * 1000;
 
@@ -81,7 +86,10 @@ export class OtpService implements IOtpService {
             }
         }
 
-        const { otpHash } = await this.generateOtpHash(email);
+        const { rawOtp, otpHash } = await this.generateOtpHash(email);
+        
+        await sendEmail(email, "Your Hector Signup Code", otpTemplate(rawOtp));
+
         const windowDuration = 15 * 60 * 1000;
         const codeDuration = Number(process.env.OTP_EXPIRY_SEC) * 1000;
 
@@ -156,7 +164,10 @@ export class OtpService implements IOtpService {
             throw new ApiError(`Maximum resend attempts reached for this session. Please try again ${timeRemaining}.`, 400);
         }
 
-        const { otpHash } = await this.generateOtpHash(email);
+        const { rawOtp, otpHash } = await this.generateOtpHash(email);
+        
+        await sendEmail(email, "Your Hector Verification Code", otpTemplate(rawOtp));
+
         const codeDuration = Number(process.env.OTP_EXPIRY_SEC) * 1000;
 
         isExist.resendCount += 1;
