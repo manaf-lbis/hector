@@ -33,7 +33,15 @@ export class KycController {
 
             const finalKycData = { ...kycData, ...filePaths };
 
+            const { userName, ...restKycData } = finalKycData;
+
             const kyc = await this._kycService.submitKyc(userId, finalKycData);
+            
+            if (userName) {
+                const mongoose = require('mongoose');
+                await mongoose.model('User').findByIdAndUpdate(userId, { name: userName });
+            }
+
             sendSuccess(res, kyc, "KYC submitted successfully");
         } catch (error) {
             next(error);

@@ -116,7 +116,7 @@ export class AuthService implements IAuthService {
         await this._userService.updateUserToken({ userId, refreshToken: "" });
     }
 
-    async getMe(userId: Types.ObjectId): Promise<{ name: string, email: string, phone: string, role: Roles, kycStatus?: string, kycData?: any }> {
+    async getMe(userId: Types.ObjectId): Promise<{ name: string, email: string, phone: string, role: Roles, kycStatus?: string, kycData?: any, location?: any }> {
         const user = await this._userService.getActiveUserById({ userId });
         if (!user) throw new ApiError('User not found', 404);
 
@@ -140,7 +140,8 @@ export class AuthService implements IAuthService {
             phone: user.phone,
             role: user.role as Roles,
             kycStatus,
-            kycData
+            kycData,
+            location: user.location
         };
     }
 }

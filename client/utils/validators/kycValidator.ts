@@ -74,3 +74,10 @@ export const validateFile = (file: File): string | null => {
     
     return null;
 };
+
+export const validatePincode = (value: string): string | null => {
+    const trimmed = value.trim();
+    if (!trimmed) return "Pincode is required";
+    if (!/^\d{6}$/.test(trimmed)) return "Pincode must be exactly 6 digits";
+    return null;
+};

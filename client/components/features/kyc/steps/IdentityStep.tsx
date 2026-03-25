@@ -23,9 +23,10 @@ const IdentityStep: React.FC<IdentityStepProps> = ({ userName, form, errors, onF
                     <TextField 
                         fullWidth 
                         value={userName} 
-                        disabled 
+                        onChange={e => onFieldChange('userName', e.target.value)}
                         variant="outlined" 
                         placeholder="Enter your full name"
+                        error={!!errors.userName} helperText={errors.userName}
                         sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
                     />
                 </Box>

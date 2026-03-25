@@ -7,9 +7,10 @@ import { ArrowBack as ArrowBackIcon, ArrowForward as ArrowForwardIcon, Send as S
 import { useRouter } from 'next/navigation';
 import { useSubmitKycMutation, useGetPrivacyPolicyQuery } from '@/store/api/kyc.api';
 import ButtonWithIcon from '@/components/ui/ButtonWithIcon';
-import { validateDob, validateDocumentNumber, validateIfsc, validateAccountNumber, validateFile } from '@/utils/validators/kycValidator';
+import { validateDob, validateDocumentNumber, validateIfsc, validateAccountNumber, validateFile, validatePincode } from '@/utils/validators/kycValidator';
 
 import IdentityStep from './steps/IdentityStep';
+import AddressStep from './steps/AddressStep';
 import UploadStep from './steps/UploadStep';
 import ReviewStep from './steps/ReviewStep';
 import KycPreviewModal from './ui/KycPreviewModal';
@@ -18,7 +19,7 @@ import ImageCropperModal from './ui/ImageCropperModal';
 import DocumentViewer from '@/components/ui/DocumentViewer';
 import KycStatusAlert from './ui/KycStatusAlert';
 
-const STEPS = ['Proof of Identity', 'Proof of address', 'Upload Document'];
+const STEPS = ['Identity Details', 'Address Details', 'Upload Documents', 'Final Review'];
 
 interface KycContainerProps {
     user: any;
@@ -54,7 +55,9 @@ const KycContainer: React.FC<KycContainerProps> = ({
     const [form, setForm] = useState({
         dob: '', documentType: '', documentNumber: '',
         bankName: '', ifsc: '', accountNo: '', confirmAccountNo: '',
+        location: '', state: '', district: '', taluk: '', pincode: '',
         agreedStep1: false, agreedStep2: false, agreedFinal: false,
+        userName: user?.name || user?.email?.split('@')[0] || ''
     });
 
     const [files, setFiles] = useState<Record<string, File | string | null>>({
@@ -78,7 +81,13 @@ const KycContainer: React.FC<KycContainerProps> = ({
                 ifsc: initialData.ifsc || '',
                 accountNo: initialData.accountNo || '',
                 confirmAccountNo: initialData.accountNo || '',
+                location: initialData.location || '',
+                state: initialData.state || '',
+                district: initialData.district || '',
+                taluk: initialData.taluk || '',
+                pincode: initialData.pincode || '',
                 agreedStep1: true, agreedStep2: true, agreedFinal: true,
+                userName: initialData.user?.name || user?.name || user?.email?.split('@')[0] || ''
             });
             setFiles({
                 idCardFront: initialData.idCardFront || null,
@@ -86,7 +95,7 @@ const KycContainer: React.FC<KycContainerProps> = ({
                 bankPassbook: initialData.bankPassbook || null,
                 profilePicture: initialData.profilePicture || null,
             });
-            setActiveStep(2);
+            setActiveStep(3);
         }
     }, [initialData]);
 
@@ -155,6 +164,7 @@ const KycContainer: React.FC<KycContainerProps> = ({
         if (e) e.preventDefault();
         if (activeStep === 0) {
             const newErrs: Record<string, string> = {};
+            if (!form.userName) newErrs.userName = "Required";
             const dobErr = validateDob(form.dob);
             if (dobErr) newErrs.dob = dobErr;
             if (!form.documentType) newErrs.documentType = "Required";
@@ -171,6 +181,17 @@ const KycContainer: React.FC<KycContainerProps> = ({
         }
 
         if (activeStep === 1) {
+            const newErrs: Record<string, string> = {};
+            if (!form.location?.trim()) newErrs.location = "Required";
+            if (!form.state?.trim()) newErrs.state = "Required";
+            if (!form.district?.trim()) newErrs.district = "Required";
+            if (!form.taluk?.trim()) newErrs.taluk = "Required";
+            const pinErr = validatePincode(form.pincode);
+            if (pinErr) newErrs.pincode = pinErr;
+            if (Object.keys(newErrs).length > 0) { setErrors(newErrs); return; }
+        }
+
+        if (activeStep === 2) {
             const newErrs: Record<string, string> = {};
             if (!files.idCardFront) newErrs.idCardFront = "Required";
             if (!files.idCardBack) newErrs.idCardBack = "Required";
@@ -218,9 +239,10 @@ const KycContainer: React.FC<KycContainerProps> = ({
 
     const renderStepContent = (step: number) => {
         switch (step) {
-            case 0: return <IdentityStep userName={user?.name || ''} form={form} errors={errors} onFieldChange={handleFieldChange} config={config} />;
-            case 1: return <UploadStep files={files} errors={errors} onFileSelect={handleFileSelect} onProfilePicSelect={handleProfilePicSelect} onRemoveFile={handleRemoveFile} onPreviewFile={handlePreviewFile} agreed={form.agreedStep2} onAgreedChange={(v) => handleFieldChange('agreedStep2', v)} />;
-            case 2: return <ReviewStep isReviewOnly={!!initialData} status={kycStatus} user={user} form={form} files={files} errors={errors} onPreviewFile={handlePreviewFile} onOpenPolicy={() => setIsPolicyModalOpen(true)} onAgreedChange={(v) => handleFieldChange('agreedFinal', v)} config={config} />;
+            case 0: return <IdentityStep userName={form.userName} form={form} errors={errors} onFieldChange={handleFieldChange} config={config} />;
+            case 1: return <AddressStep form={form} errors={errors} onFieldChange={handleFieldChange} />;
+            case 2: return <UploadStep files={files} errors={errors} onFileSelect={handleFileSelect} onProfilePicSelect={handleProfilePicSelect} onRemoveFile={handleRemoveFile} onPreviewFile={handlePreviewFile} agreed={form.agreedStep2} onAgreedChange={(v) => handleFieldChange('agreedStep2', v)} />;
+            case 3: return <ReviewStep isReviewOnly={!!initialData} status={kycStatus} user={user} form={form} files={files} errors={errors} onPreviewFile={handlePreviewFile} onOpenPolicy={() => setIsPolicyModalOpen(true)} onAgreedChange={(v) => handleFieldChange('agreedFinal', v)} config={config} />;
             default: return null;
         }
     };
@@ -343,9 +365,9 @@ const KycContainer: React.FC<KycContainerProps> = ({
                                         </Box>
                                     )}
 
-                                    {(isViewing || (!isAdmin && isApproved)) && renderStepContent(2)}
+                                    {(isViewing || (!isAdmin && isApproved)) && renderStepContent(3)}
 
-                                    {isAdmin && (isPending || isApproved) && renderStepContent(2)}
+                                    {isAdmin && (isPending || isApproved) && renderStepContent(3)}
                                 </Box>
                             )}
 

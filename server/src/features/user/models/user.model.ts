@@ -44,6 +44,13 @@ const userSchema = new Schema<IUser>({
     },
     lastLogin: {
         type: Date
+    },
+    location: {
+        lat: Number,
+        lng: Number,
+        address: String,
+        city: String,
+        state: String
     }
 }, {
     timestamps: true

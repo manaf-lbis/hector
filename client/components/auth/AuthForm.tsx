@@ -20,6 +20,7 @@ import {
 
 import { loginSuccess } from '@/store/slices/auth.slice';
 import { useDispatch } from 'react-redux';
+import { authApi } from '@/store/api/auth.api';
 
 type AuthType = 'login' | 'signup';
 
@@ -113,8 +114,11 @@ export default function AuthForm({ type, isModal = false }: AuthFormProps) {
       }
 
       const user = response.data ?? response.user ?? response;
+      
+      // Trigger a direct /me fetch to get full data (location, KYC status)
+      const fullUser = await dispatch(authApi.endpoints.getMe.initiate(undefined, { forceRefetch: true })).unwrap();
 
-      dispatch(loginSuccess(user));
+      dispatch(loginSuccess(fullUser.data || fullUser));
 
       if (user.role === 'admin') {
         window.location.href = '/admin';

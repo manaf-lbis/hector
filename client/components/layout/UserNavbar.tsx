@@ -13,6 +13,10 @@ import { useRouter } from "next/navigation";
 import { logout } from "@/store/slices/auth.slice";
 import { useState, useMemo } from "react";
 import { useLogoutMutation } from "@/store/api/auth.api";
+import { useCurrentLocation } from "@/hooks/useCurrentLocation";
+import LocationSelector from "../ui/location/LocationSelector";
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import { Typography } from "@mui/material";
 
 const UserNavbar = () => {
     const { user } = useSelector((state: RootState) => state.user);
@@ -22,6 +26,13 @@ const UserNavbar = () => {
     const [serverLogout] = useLogoutMutation();
     const currentKycStatus = user?.kycStatus;
     const currentKycData = user?.kycData;
+
+    const [locationModalOpen, setLocationModalOpen] = useState(false);
+
+    useCurrentLocation(user);
+
+    const locCity = user?.location?.city || "Kerala";
+    const locState = user?.location?.state || "India";
 
 
     const handleLogout = async () => {
@@ -75,13 +86,44 @@ const UserNavbar = () => {
                         alignItems: 'center',
                     }}
                 >
-                    <Logo navigateTo="/user" />
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, md: 4 } }}>
+                        <Logo navigateTo="/user" />
+
+                        <Box
+                            onClick={() => setLocationModalOpen(true)}
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 0.5,
+                                cursor: 'pointer',
+                                padding: { xs: '4px 8px', md: '6px 12px' },
+                                borderRadius: 8,
+                                '&:hover': { bgcolor: 'action.hover' }
+                            }}
+                        >
+                            <LocationOnIcon color="primary" fontSize="small" />
+                            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                                <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1, fontWeight: 'bold' }}>
+                                    {locState}
+                                </Typography>
+                                <Typography variant="body2" color="text.primary" sx={{ lineHeight: 1.2, fontWeight: 'medium' }}>
+                                    {locCity}
+                                </Typography>
+                            </Box>
+                        </Box>
+                    </Box>
+
+                    <LocationSelector
+                        open={locationModalOpen}
+                        onClose={() => setLocationModalOpen(false)}
+                        currentLocation={user?.location}
+                    />
 
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         <Box onClick={toggleDrawer(true)} sx={{ cursor: 'pointer' }}>
                             <UserProfile user={user} kycStatus={currentKycStatus} kycData={currentKycData} position="right" />
                         </Box>
-                        <AppDrawer 
+                        <AppDrawer
                             open={drawerOpen}
                             onClose={toggleDrawer(false)}
                             user={user}

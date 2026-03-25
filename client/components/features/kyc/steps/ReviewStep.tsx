@@ -24,13 +24,21 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
 }) => {
     const theme = useTheme();
     const summaryItems = [
-        { label: 'Full Name', value: user?.name },
+        { label: 'Full Name', value: form.userName },
         { label: 'Date of Birth', value: form.dob },
         { label: 'Document Type', value: config?.DOCUMENT_TYPES?.find(d => d.value === form.documentType)?.label },
         { label: 'Document Number', value: form.documentNumber },
         { label: 'Bank Name', value: form.bankName },
         { label: 'IFSC Code', value: form.ifsc },
         { label: 'Account Number', value: form.accountNo },
+    ];
+
+    const addressItems = [
+        { label: 'House Name / Landmark', value: form.location },
+        { label: 'State', value: form.state },
+        { label: 'District', value: form.district },
+        { label: 'Taluk', value: form.taluk },
+        { label: 'Pincode', value: form.pincode },
     ];
 
     return (
@@ -77,6 +85,29 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
                 {summaryItems.map(({ label, value }) => (
                     <Box key={label} sx={{
                         gridColumn: label === 'Full Name' ? '1 / -1' : 'auto'
+                    }}>
+                        <Typography variant="body2" fontWeight={800} color="text.primary" sx={{ mb: 1 }}>
+                            {label}
+                        </Typography>
+                        <TextField
+                            fullWidth
+                            value={value || '—'}
+                            disabled
+                            variant="outlined"
+                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
+                        />
+                    </Box>
+                ))}
+            </Box>
+
+            <Typography variant="h6" fontWeight={900} color="text.primary" letterSpacing="-0.02em" sx={{ mt: 6, mb: 3 }}>
+                Address Details
+            </Typography>
+
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 3 }}>
+                {addressItems.map(({ label, value }) => (
+                    <Box key={label} sx={{
+                        gridColumn: label === 'House Name / Landmark' ? '1 / -1' : 'auto'
                     }}>
                         <Typography variant="body2" fontWeight={800} color="text.primary" sx={{ mb: 1 }}>
                             {label}

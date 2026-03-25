@@ -60,4 +60,21 @@ export class UserController {
             next(error);
         }
     }
+
+    async updateLocation(req: Request, res: Response, next: NextFunction) {
+        try {
+            const userId = (req as any).user.userId;
+            const { lat, lng, address, city, state } = req.body;
+            
+            const user = await mongoose.model('User').findByIdAndUpdate(
+                userId,
+                { location: { lat, lng, address, city, state } },
+                { new: true }
+            );
+            
+            sendSuccess(res, user, "Location updated successfully");
+        } catch (error) {
+            next(error);
+        }
+    }
 }

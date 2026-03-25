@@ -15,8 +15,17 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
     const pathname = usePathname();
     const [isMounted, setIsMounted] = useState(false);
 
+    const isMaybeAuthenticated = useMemo(() => {
+        if (typeof window === 'undefined') return false;
+        try {
+            return !!localStorage.getItem('auth');
+        } catch {
+            return false;
+        }
+    }, [isMounted]);
+
     const { data: userData, isSuccess, isError, isLoading, isFetching } = useGetMeQuery(undefined, {
-        skip: !isMounted,
+        skip: !isMounted || !isMaybeAuthenticated,
     });
 
     useEffect(() => {

@@ -1,9 +1,5 @@
 import { useState, useEffect } from 'react';
 
-/**
- * A custom hook that returns a debounced version of the provided value.
- * Useful for delaying API calls until the user has stopped typing.
- */
 export function useDebounce<T>(value: T, delay: number): T {
     const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
