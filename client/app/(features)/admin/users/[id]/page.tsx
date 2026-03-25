@@ -10,15 +10,10 @@ import {
     Avatar,
     Chip,
     Divider,
-    List,
-    ListItem,
-    ListItemText,
-    ListItemIcon,
     alpha,
     Alert,
     CircularProgress,
     IconButton,
-    Button,
     Stack
 } from '@mui/material';
 import {
@@ -52,13 +47,8 @@ export default function AdminUserDetailsPage() {
     const userId = params.id as string;
 
     const { data: userResponse, isLoading: isLoadingUser, refetch: refetchUser } = useGetUserDetailsQuery(userId);
-    const { data: logs, isLoading: isLoadingLogs } = useGetLoginLogsQuery({ userId, limit: 10 });
     const [reviewKyc, { isLoading: isReviewing }] = useReviewKycMutation();
     const [updateStatus, { isLoading: isUpdatingStatus }] = useUpdateUserStatusMutation();
-
-    const { user: currentUser } = useSelector((state: RootState) => state.user);
-    const isSelf = currentUser?._id === userId;
-
     const [modalConfig, setModalConfig] = useState<{ open: boolean, action: 'approve' | 'reject' | 'return' }>({
         open: false,
         action: 'approve'
@@ -111,9 +101,9 @@ export default function AdminUserDetailsPage() {
     return (
         <Container maxWidth="xl" sx={{ py: 6, px: { xs: 2, md: 4 } }}>
             <Box sx={{ mb: 4, display: 'flex', alignItems: 'flex-start', gap: 2 }}>
-                <IconButton 
-                    onClick={() => router.back()} 
-                    sx={{ 
+                <IconButton
+                    onClick={() => router.back()}
+                    sx={{
                         mt: 0.5,
                         bgcolor: alpha('#000', 0.04),
                         '&:hover': { bgcolor: alpha('#000', 0.08) }
@@ -177,7 +167,6 @@ export default function AdminUserDetailsPage() {
                                 startIcon={user.status === 'active' ? <BlockIcon /> : <ActiveIcon />}
                                 onClick={handleToggleBlock}
                                 loading={isUpdatingStatus}
-                                disabled={isSelf}
                             >
                                 {user.status === 'active' ? 'Block Account' : 'Unblock Account'}
                             </AppButton>
@@ -234,9 +223,9 @@ export default function AdminUserDetailsPage() {
                                         color="success"
                                         sx={{ fontWeight: 900, px: 1, height: 40, '& .MuiChip-icon': { fontSize: 24 } }}
                                     />
-                                    <AppButton 
-                                        variant="outlined" 
-                                        size="small" 
+                                    <AppButton
+                                        variant="outlined"
+                                        size="small"
                                         color="primary"
                                         onClick={() => handleActionClick('return')}
                                     >
