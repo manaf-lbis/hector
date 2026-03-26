@@ -8,6 +8,7 @@ import { connectDB } from "./shared/configs/db.config";
 
 
 const app = express();
+app.set('trust proxy', 1);
 dotenv.config();
 connectDB()
 
