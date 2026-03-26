@@ -12,18 +12,33 @@ class KycRepository extends base_repo_1.BaseRepository {
         return await this.create(data);
     }
     async getKycByUserId(userId) {
-        return await this.findOne({ user: userId });
+        return await kyc_model_1.KycModel.findOne({ user: userId })
+            .populate('approvedBy', 'name')
+            .exec();
     }
     async getKycById(id) {
         return await this.findById(id);
     }
-    async updateKycStatus(id, status, adminId, reason) {
-        const updateData = { kycStatus: status, reason };
-        if (status === types_1.KycStatus.APPROVED && adminId) {
+    async updateKycStatus(id, status, adminId, reason, adminName, adminRole) {
+        const updateData = {
+            kycStatus: status,
+            reason,
+            $push: {
+                history: {
+                    status,
+                    actionBy: adminId,
+                    actionByName: adminName || 'Admin',
+                    actionByRole: adminRole || 'admin',
+                    reason,
+                    createdAt: new Date()
+                }
+            }
+        };
+        if (status === types_1.KycStatus.APPROVED) {
             updateData.approvedOn = new Date();
             updateData.approvedBy = adminId;
         }
-        return await this.update(id, updateData);
+        return await kyc_model_1.KycModel.findByIdAndUpdate(id, updateData, { new: true }).exec();
     }
     async updateKycData(userId, data) {
         return await kyc_model_1.KycModel.findOneAndUpdate({ user: userId }, data, { new: true, runValidators: true }).exec();

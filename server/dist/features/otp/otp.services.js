@@ -8,6 +8,8 @@ const api_error_1 = __importDefault(require("../../shared/utility/api.error"));
 const date_fns_1 = require("date-fns");
 const hashing_utility_1 = require("../../shared/utility/hashing.utility");
 const otp_utility_1 = require("../../shared/utility/otp.utility");
+const email_cilent_config_1 = require("../../shared/configs/email.cilent.config");
+const otp_template_1 = require("../../shared/templates/otp.template");
 const types_1 = require("./types");
 class OtpService {
     constructor(_otpRepo) {
@@ -38,7 +40,8 @@ class OtpService {
                 throw new api_error_1.default(`Maximum resend attempts reached for this session. Please try again ${timeRemaining}.`, 400);
             }
         }
-        const { otpHash } = await this.generateOtpHash(email);
+        const { rawOtp, otpHash } = await this.generateOtpHash(email);
+        await (0, email_cilent_config_1.sendEmail)(email, "Your Hector Login Code", (0, otp_template_1.otpTemplate)(rawOtp));
         const windowDuration = 15 * 60 * 1000;
         const codeDuration = Number(process.env.OTP_EXPIRY_SEC) * 1000;
         const otpData = await this._otpRepo.upsert({ email, purpose: types_1.OtpPurpose.login }, {
@@ -66,7 +69,8 @@ class OtpService {
                 throw new api_error_1.default(`Maximum resend attempts reached for this session. Please try again ${timeRemaining}.`, 400);
             }
         }
-        const { otpHash } = await this.generateOtpHash(email);
+        const { rawOtp, otpHash } = await this.generateOtpHash(email);
+        await (0, email_cilent_config_1.sendEmail)(email, "Your Hector Signup Code", (0, otp_template_1.otpTemplate)(rawOtp));
         const windowDuration = 15 * 60 * 1000;
         const codeDuration = Number(process.env.OTP_EXPIRY_SEC) * 1000;
         const otpData = await this._otpRepo.upsert({ email, purpose: types_1.OtpPurpose.signup }, {
@@ -122,7 +126,8 @@ class OtpService {
             const timeRemaining = (0, date_fns_1.formatDistanceToNow)(isExist.windowExpiresAt);
             throw new api_error_1.default(`Maximum resend attempts reached for this session. Please try again ${timeRemaining}.`, 400);
         }
-        const { otpHash } = await this.generateOtpHash(email);
+        const { rawOtp, otpHash } = await this.generateOtpHash(email);
+        await (0, email_cilent_config_1.sendEmail)(email, "Your Hector Verification Code", (0, otp_template_1.otpTemplate)(rawOtp));
         const codeDuration = Number(process.env.OTP_EXPIRY_SEC) * 1000;
         isExist.resendCount += 1;
         isExist.attempts = 0;

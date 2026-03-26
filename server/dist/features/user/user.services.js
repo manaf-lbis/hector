@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserService = void 0;
+const mongoose_1 = require("mongoose");
 const api_error_1 = __importDefault(require("../../shared/utility/api.error"));
 const types_1 = require("./types");
 const loginLog_model_1 = require("./models/loginLog.model");
@@ -44,22 +45,72 @@ class UserService {
     async getActiveUserById({ userId }) {
         const user = await this._userRepo.findOne({ _id: userId });
         if (!user)
-            throw new api_error_1.default('user not found');
-        if (user.status !== types_1.UserStatus.active)
-            throw new api_error_1.default('user is not blocked');
+            throw new api_error_1.default('User not found');
+        if (user.status === types_1.UserStatus.blocked)
+            throw new api_error_1.default('Your account has been blocked. Please contact support.');
         return user;
     }
-    async getAllUsers(page = 1, limit = 10) {
-        const users = await this._userRepo.find({});
-        // Note: BaseRepository find doesn't support pagination yet.
-        // For now, I'll filter manually or update BaseRepository.
-        // Actually, I'll use the model directly here to handle pagination properly.
+    async getUserById({ userId }) {
+        const user = await this._userRepo.findOne({ _id: userId });
+        if (!user)
+            throw new api_error_1.default('User not found');
+        return user;
+    }
+    async getAllUsers(page = 1, limit = 10, search, status) {
         const skip = (page - 1) * limit;
-        const [data, total] = await Promise.all([
-            this._userRepo.findAll().then(res => res.slice(skip, skip + limit)), // Simplified for now
-            this._userRepo.findAll().then(res => res.length)
+        const query = {};
+        if (status && status !== 'all') {
+            query.status = status;
+        }
+        if (search) {
+            const searchRegex = new RegExp(search, 'i');
+            query.$or = [
+                { name: searchRegex },
+                { email: searchRegex },
+                { customId: searchRegex }
+            ];
+        }
+        const [users, total, countResults] = await Promise.all([
+            await this._userRepo.findAll().then(res => {
+                let filtered = res;
+                if (status && status !== 'all')
+                    filtered = filtered.filter(u => u.status === status);
+                if (search) {
+                    const regex = new RegExp(search, 'i');
+                    filtered = filtered.filter(u => regex.test(u.name) ||
+                        regex.test(u.email) ||
+                        u.customId && regex.test(u.customId));
+                }
+                return filtered.slice(skip, skip + limit);
+            }),
+            await this._userRepo.findAll().then(res => {
+                let filtered = res;
+                if (status && status !== 'all')
+                    filtered = filtered.filter(u => u.status === status);
+                if (search) {
+                    const regex = new RegExp(search, 'i');
+                    filtered = filtered.filter(u => regex.test(u.name) ||
+                        regex.test(u.email) ||
+                        u.customId && regex.test(u.customId));
+                }
+                return filtered.length;
+            }),
+            await this._userRepo.findAll().then(res => {
+                let baseData = res;
+                if (search) {
+                    const regex = new RegExp(search, 'i');
+                    baseData = baseData.filter(u => regex.test(u.name) ||
+                        regex.test(u.email) ||
+                        u.customId && regex.test(u.customId));
+                }
+                const counts = { all: baseData.length };
+                baseData.forEach(u => {
+                    counts[u.status] = (counts[u.status] || 0) + 1;
+                });
+                return counts;
+            })
         ]);
-        return { users: data, total };
+        return { users, total, counts: countResults };
     }
     async recordLogin(userId, ip, userAgent) {
         await this._userRepo.update(userId, { lastLogin: new Date() });
@@ -75,6 +126,12 @@ class UserService {
             .sort({ loggedInAt: -1 })
             .limit(limit)
             .exec();
+    }
+    async updateUserStatus(userId, status) {
+        const user = await this._userRepo.update(new mongoose_1.Types.ObjectId(userId), { status });
+        if (!user)
+            throw new api_error_1.default("User not found");
+        return user;
     }
 }
 exports.UserService = UserService;

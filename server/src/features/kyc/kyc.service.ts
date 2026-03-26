@@ -16,7 +16,7 @@ export class KycService implements IKycService {
             const updated = await this._kycRepo.updateKycData(userId, {
                 ...data,
                 kycStatus: KycStatus.RESUBMITTED,
-                reason: undefined, // Clear the previous reason on resubmit
+                reason: undefined, 
                 $push: {
                     history: {
                         status: KycStatus.RESUBMITTED,
@@ -25,8 +25,8 @@ export class KycService implements IKycService {
                         actionByRole: 'user',
                         createdAt: new Date()
                     }
-                } as any
-            });
+                }
+            } as any);
             if (!updated) throw new ApiError("Failed to update KYC", 500);
             return updated;
         }

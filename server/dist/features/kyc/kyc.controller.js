@@ -33,7 +33,12 @@ class KycController {
                 kycData = JSON.parse(kycData.data);
             }
             const finalKycData = { ...kycData, ...filePaths };
+            const { userName, ...restKycData } = finalKycData;
             const kyc = await this._kycService.submitKyc(userId, finalKycData);
+            if (userName) {
+                const mongoose = require('mongoose');
+                await mongoose.model('User').findByIdAndUpdate(userId, { name: userName });
+            }
             (0, api_success_1.sendSuccess)(res, kyc, "KYC submitted successfully");
         }
         catch (error) {
@@ -55,8 +60,10 @@ class KycController {
     }
     async getPendingKyc(req, res, next) {
         try {
-            const kycList = await this._kycService.getPendingKyc();
-            (0, api_success_1.sendSuccess)(res, kycList, "Pending KYC list retrieved");
+            const search = req.query.search;
+            const status = req.query.status;
+            const result = await this._kycService.getPendingKyc(search, status);
+            (0, api_success_1.sendSuccess)(res, result, "KYC list retrieved successfully");
         }
         catch (error) {
             next(error);
@@ -72,7 +79,9 @@ class KycController {
             if ((status === types_1.KycStatus.REJECTED || status === types_1.KycStatus.RETURNED) && !reason) {
                 throw new api_error_1.default(`Reason is required for ${status}`, 400);
             }
-            const kyc = await this._kycService.reviewKyc(kycId, status, adminId, reason);
+            const adminName = req.user.name;
+            const adminRole = req.user.role;
+            const kyc = await this._kycService.reviewKyc(kycId, status, adminId, reason, adminName, adminRole);
             (0, api_success_1.sendSuccess)(res, kyc, `KYC ${status} successfully`);
         }
         catch (error) {
@@ -121,7 +130,6 @@ class KycController {
                     }).on('error', reject);
                 });
             };
-
             let result = await tryFetch('image', publicIdWithoutExt);
             if (result.status !== 200) {
                 console.log(`[KYC_GET_FILE] image/publicId fail (${result.status}), trying raw/fullPath...`);

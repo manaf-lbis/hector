@@ -54,7 +54,7 @@ export class UserController {
                 throw new Error("You cannot block your own account");
             }
 
-            const user = await this._userService.updateUserStatus(id, status);
+            const user = await this._userService.updateUserStatus(id as string, status as any);
             sendSuccess(res, user, `User status updated to ${status}`);
         } catch (error) {
             next(error);
