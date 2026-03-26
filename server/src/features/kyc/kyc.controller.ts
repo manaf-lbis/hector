@@ -125,7 +125,7 @@ export class KycController {
                 });
 
                 return new Promise<{ status: number; contentType?: string; body?: string }>((resolve, reject) => {
-                    https.get(signedUrl, (cloudinaryRes) => {
+                    https.get(signedUrl, (cloudinaryRes: any) => {
                         if (cloudinaryRes.statusCode === 200) {
                             const contentType = cloudinaryRes.headers['content-type'] as string;
                             if (contentType) res.setHeader('Content-Type', contentType);
@@ -133,7 +133,7 @@ export class KycController {
                             resolve({ status: 200 });
                         } else {
                             let data = '';
-                            cloudinaryRes.on('data', chunk => data += chunk);
+                            cloudinaryRes.on('data', (chunk: any) => data += chunk);
                             cloudinaryRes.on('end', () => resolve({ status: cloudinaryRes.statusCode || 500, body: data }));
                         }
                     }).on('error', reject);
