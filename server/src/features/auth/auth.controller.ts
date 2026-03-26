@@ -11,19 +11,22 @@ export class AuthController {
         private _authService: IAuthService
     ) { }
 
+    private _getCookieOptions(maxAge?: number) {
+        return {
+            ...(maxAge !== undefined && { maxAge }),
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' as const : 'lax' as const,
+        };
+    }
+
     private async _setTokens({ res, accessToken, refreshToken }: { res: Response, accessToken: string, refreshToken: string }) {
-        res.cookie('accesstoken', accessToken,
-            { maxAge: Number(process.env.JWT_ACCESS_EXPIRATION_MIN) * 60 * 1000 }
-        );
-        res.cookie('refresh', refreshToken,
-            { maxAge: Number(process.env.JWT_REFRESH_EXPIRATION_DAY) * 24 * 60 * 60 * 1000 }
-        );
+        res.cookie('accesstoken', accessToken, this._getCookieOptions(Number(process.env.JWT_ACCESS_EXPIRATION_MIN) * 60 * 1000));
+        res.cookie('refresh', refreshToken, this._getCookieOptions(Number(process.env.JWT_REFRESH_EXPIRATION_DAY) * 24 * 60 * 60 * 1000));
     }
 
     private async _setAuthToken({ res, token }: { res: Response, token: string }) {
-        res.cookie('authToken', token,
-            { maxAge: Number(process.env.JWT_ACCESS_EXPIRATION_MIN) * 60 * 1000 }
-        );
+        res.cookie('authToken', token, this._getCookieOptions(Number(process.env.JWT_ACCESS_EXPIRATION_MIN) * 60 * 1000));
     }
 
     async login(req: Request, res: Response, next: NextFunction) {
@@ -82,7 +85,7 @@ export class AuthController {
                 userAgent: req.headers['user-agent'] as string
             })
 
-            res.clearCookie('authToken');
+            res.clearCookie('authToken', this._getCookieOptions());
             await this._setTokens({ res, accessToken: result.accessToken, refreshToken: result.refreshToken });
             sendSuccess(res, {
                 name: tokenPayload.name!,
@@ -114,7 +117,7 @@ export class AuthController {
                 userAgent: req.headers['user-agent'] as string
             });
 
-            res.clearCookie('authToken');
+            res.clearCookie('authToken', this._getCookieOptions());
             await this._setTokens({ res, accessToken: result.accessToken, refreshToken: result.refreshToken });
 
             sendSuccess(res, {
@@ -179,8 +182,8 @@ export class AuthController {
             const user = req.user;
             await this._authService.logout(user.userId);
 
-            res.clearCookie('accesstoken');
-            res.clearCookie('refresh');
+            res.clearCookie('accesstoken', this._getCookieOptions());
+            res.clearCookie('refresh', this._getCookieOptions());
 
             sendSuccess(res, null, 'Logout successful');
         } catch (error) {
