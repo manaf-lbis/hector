@@ -7,6 +7,8 @@ exports.AuthService = void 0;
 const api_error_1 = __importDefault(require("../../shared/utility/api.error"));
 const token_utility_1 = require("../../shared/utility/token.utility");
 const types_1 = require("../user/types");
+const email_cilent_config_1 = require("../../shared/configs/email.cilent.config");
+const welcome_template_1 = require("../../shared/templates/welcome.template");
 class AuthService {
     constructor(_userService, _otpService) {
         this._userService = _userService;
@@ -41,7 +43,13 @@ class AuthService {
     async verifySignup({ otp, name, email, phone, otpId, ip, userAgent }) {
         await this._otpService.validateOtp({ otpId, submittedOtp: otp });
         const user = await this._userService.createUser({ name, email, phone, role: types_1.Roles.user });
-        const tokens = (0, token_utility_1.generateTokens)({ userId: user._id, role: user.role });
+        try {
+            await (0, email_cilent_config_1.sendEmail)(user.email, "Welcome to Hector!", (0, welcome_template_1.welcomeTemplate)(user.name));
+        }
+        catch (error) {
+            console.error("Failed to send welcome email:", error);
+        }
+        const tokens = (0, token_utility_1.generateTokens)({ userId: user._id, role: user.role, name: user.name });
         await this._userService.updateUserToken({ userId: user._id, refreshToken: tokens.refreshToken });
         await this._userService.recordLogin(user._id, ip, userAgent);
         return {
@@ -56,7 +64,7 @@ class AuthService {
         const user = await this._userService.findByIdentifier({ identifier: email });
         if (!user)
             throw new api_error_1.default('user not found');
-        const tokens = (0, token_utility_1.generateTokens)({ userId: user._id, role: user.role });
+        const tokens = (0, token_utility_1.generateTokens)({ userId: user._id, role: user.role, name: user.name });
         await this._userService.updateUserToken({ userId: user._id, refreshToken: tokens.refreshToken });
         await this._userService.recordLogin(user._id, ip, userAgent);
         return {
@@ -79,7 +87,7 @@ class AuthService {
         if (!user || user.refreshToken !== token) {
             throw new api_error_1.default('Invalid refresh token', 401);
         }
-        const tokens = (0, token_utility_1.generateTokens)({ userId: user._id, role: user.role });
+        const tokens = (0, token_utility_1.generateTokens)({ userId: user._id, role: user.role, name: user.name });
         await this._userService.updateUserToken({ userId: user._id, refreshToken: tokens.refreshToken });
         return {
             accessToken: tokens.accessToken,
@@ -94,11 +102,27 @@ class AuthService {
         const user = await this._userService.getActiveUserById({ userId });
         if (!user)
             throw new api_error_1.default('User not found', 404);
+        let kycStatus = undefined;
+        let kycData = undefined;
+        try {
+            const mongoose = require('mongoose');
+            const kyc = await mongoose.model('Kyc').findOne({ user: userId }).select('kycStatus profilePicture');
+            if (kyc) {
+                kycStatus = kyc.kycStatus;
+                kycData = { profilePicture: kyc.profilePicture };
+            }
+        }
+        catch (error) {
+            console.error('Error fetching KYC for /me', error);
+        }
         return {
             name: user.name,
             email: user.email,
             phone: user.phone,
-            role: user.role
+            role: user.role,
+            kycStatus,
+            kycData,
+            location: user.location
         };
     }
 }

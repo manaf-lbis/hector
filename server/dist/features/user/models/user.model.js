@@ -78,6 +78,13 @@ const userSchema = new mongoose_1.Schema({
     },
     lastLogin: {
         type: Date
+    },
+    location: {
+        lat: Number,
+        lng: Number,
+        address: String,
+        city: String,
+        state: String
     }
 }, {
     timestamps: true

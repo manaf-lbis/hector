@@ -95,6 +95,9 @@ const kycSchema = new mongoose_1.Schema({
         type: String,
         required: [true, "Bank passbook image is required"]
     },
+    profilePicture: {
+        type: String
+    },
     kycStatus: {
         type: String,
         enum: Object.values(types_1.KycStatus),
@@ -109,7 +112,15 @@ const kycSchema = new mongoose_1.Schema({
     approvedBy: {
         type: mongoose_1.Schema.Types.ObjectId,
         ref: 'User'
-    }
+    },
+    history: [{
+            status: { type: String, enum: Object.values(types_1.KycStatus) },
+            actionBy: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User' },
+            actionByName: String,
+            actionByRole: String,
+            reason: String,
+            createdAt: { type: Date, default: Date.now }
+        }]
 }, {
     timestamps: true
 });
