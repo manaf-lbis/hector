@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import UserIdentifierForm from './UserIdentifierForm';
 import OTPForm from './OTPForm';
 import Logo from '../ui/Logo';
+import { validateEmail, validateFullName, validatePhone } from '@/utils/validators/formValidator';
 
 import {
   useInitiateLoginMutation,
@@ -19,7 +20,7 @@ import {
 } from '@/store/api/auth.api';
 
 import { loginSuccess } from '@/store/slices/auth.slice';
-import { useDispatch } from 'react-redux';
+import { useAppDispatch } from '@/store/hooks';
 import { authApi } from '@/store/api/auth.api';
 
 type AuthType = 'login' | 'signup';
@@ -30,7 +31,7 @@ interface AuthFormProps {
 }
 
 export default function AuthForm({ type, isModal = false }: AuthFormProps) {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const router = useRouter();
   const theme = useTheme();
 

@@ -27,7 +27,7 @@ const AddressStep: React.FC<AddressStepProps> = ({ form, errors, onFieldChange }
                 </Box>
 
                 <Grid container spacing={3}>
-                    <Grid item xs={12} sm={6}>
+                    <Grid size={{ xs: 12, sm: 6 }}>
                         <Typography variant="body2" fontWeight={800} color="text.primary" sx={{ mb: 1 }}>
                             State <Typography component="span" color="error" sx={{ verticalAlign: 'top' }}>*</Typography>
                         </Typography>
@@ -41,7 +41,7 @@ const AddressStep: React.FC<AddressStepProps> = ({ form, errors, onFieldChange }
                             sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
                         />
                     </Grid>
-                    <Grid item xs={12} sm={6}>
+                    <Grid size={{ xs: 12, sm: 6 }}>
                         <Typography variant="body2" fontWeight={800} color="text.primary" sx={{ mb: 1 }}>
                             District <Typography component="span" color="error" sx={{ verticalAlign: 'top' }}>*</Typography>
                         </Typography>
@@ -58,7 +58,7 @@ const AddressStep: React.FC<AddressStepProps> = ({ form, errors, onFieldChange }
                 </Grid>
 
                 <Grid container spacing={3}>
-                    <Grid item xs={12} sm={6}>
+                    <Grid size={{ xs: 12, sm: 6 }}>
                         <Typography variant="body2" fontWeight={800} color="text.primary" sx={{ mb: 1 }}>
                             Taluk <Typography component="span" color="error" sx={{ verticalAlign: 'top' }}>*</Typography>
                         </Typography>
@@ -72,7 +72,7 @@ const AddressStep: React.FC<AddressStepProps> = ({ form, errors, onFieldChange }
                             sx={{ '& .MuiOutlinedInput-root': { borderRadius: 1.5 } }}
                         />
                     </Grid>
-                    <Grid item xs={12} sm={6}>
+                    <Grid size={{ xs: 12, sm: 6 }}>
                         <Typography variant="body2" fontWeight={800} color="text.primary" sx={{ mb: 1 }}>
                             Pincode <Typography component="span" color="error" sx={{ verticalAlign: 'top' }}>*</Typography>
                         </Typography>
