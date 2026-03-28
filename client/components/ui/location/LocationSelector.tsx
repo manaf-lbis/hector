@@ -7,11 +7,12 @@ import { useJsApiLoader } from '@react-google-maps/api';
 import LocationSearch from './LocationSearch';
 import MapSelection from './MapSelection';
 import { useUpdateUserLocationMutation } from '@/store/api/auth.api';
+import { ILocation } from '@/types/user.type';
 
 interface LocationSelectorProps {
     open: boolean;
     onClose: () => void;
-    currentLocation?: { lat: number; lng: number; address?: string; city?: string; state?: string };
+    currentLocation?: ILocation;
 }
 
 const libraries: "places"[] = ["places"];
