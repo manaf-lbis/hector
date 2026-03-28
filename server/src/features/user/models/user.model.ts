@@ -46,8 +46,15 @@ const userSchema = new Schema<IUser>({
         type: Date
     },
     location: {
-        lat: Number,
-        lng: Number,
+        type: {
+            type: String,
+            enum: ['Point'],
+            default: 'Point'
+        },
+        coordinates: {
+            type: [Number], // [longitude, latitude]
+            required: true
+        },
         address: String,
         city: String,
         state: String
@@ -55,6 +62,8 @@ const userSchema = new Schema<IUser>({
 }, {
     timestamps: true
 });
+
+userSchema.index({ location: '2dsphere' });
 
 userSchema.pre('save', async function() {
     if (!this.customId) {

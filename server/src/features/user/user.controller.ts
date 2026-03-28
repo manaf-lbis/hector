@@ -68,7 +68,13 @@ export class UserController {
             
             const user = await mongoose.model('User').findByIdAndUpdate(
                 userId,
-                { location: { lat, lng, address, city, state } },
+                { location: { 
+                    type: 'Point', 
+                    coordinates: [lng, lat], 
+                    address, 
+                    city, 
+                    state 
+                } },
                 { new: true }
             );
             

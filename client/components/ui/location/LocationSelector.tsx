@@ -32,8 +32,8 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({ open, onClose, curr
     const defaultLng = 76.6141;
 
     const [selectedPos, setSelectedPos] = useState({ 
-        lat: Number.isFinite(currentLocation?.lat) ? currentLocation!.lat : defaultLat, 
-        lng: Number.isFinite(currentLocation?.lng) ? currentLocation!.lng : defaultLng 
+        lat: Number.isFinite(currentLocation?.coordinates?.[1]) ? currentLocation!.coordinates[1] : defaultLat, 
+        lng: Number.isFinite(currentLocation?.coordinates?.[0]) ? currentLocation!.coordinates[0] : defaultLng 
     });
     const [selectedAddress, setSelectedAddress] = useState(currentLocation?.address || '');
     const [selectedCity, setSelectedCity] = useState(currentLocation?.city || '');
@@ -41,8 +41,8 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({ open, onClose, curr
 
     useEffect(() => {
         if (open && currentLocation) {
-            const lat = Number.isFinite(currentLocation.lat) ? currentLocation.lat : defaultLat;
-            const lng = Number.isFinite(currentLocation.lng) ? currentLocation.lng : defaultLng;
+            const lat = Number.isFinite(currentLocation.coordinates?.[1]) ? currentLocation.coordinates[1] : defaultLat;
+            const lng = Number.isFinite(currentLocation.coordinates?.[0]) ? currentLocation.coordinates[0] : defaultLng;
             setSelectedPos({ lat, lng });
             setSelectedAddress(currentLocation.address || '');
             setSelectedCity(currentLocation.city || '');
