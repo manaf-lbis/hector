@@ -25,6 +25,7 @@ const UploadStep: React.FC<UploadStepProps> = ({
                     hint="A clear photo of your face · png, jpeg"
                     file={files.profilePicture}
                     error={errors.profilePicture}
+                    accept="image/jpeg,image/jpg,image/png"
                     onFileSelect={(f) => onProfilePicSelect(f)}
                     onRemove={() => onRemoveFile('profilePicture')}
                     onPreview={() => onPreviewFile(files.profilePicture)}

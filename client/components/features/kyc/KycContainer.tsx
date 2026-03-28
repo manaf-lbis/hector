@@ -120,6 +120,12 @@ const KycContainer: React.FC<KycContainerProps> = ({
     };
 
     const handleProfilePicSelect = (file: File) => {
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+        if (!allowedTypes.includes(file.type)) {
+            setErrors(p => ({ ...p, profilePicture: 'Only JPG, JPEG, and PNG are allowed' }));
+            return;
+        }
+        
         const reader = new FileReader();
         reader.onload = () => {
             setCropper({ open: true, imageSrc: reader.result as string });
@@ -130,6 +136,7 @@ const KycContainer: React.FC<KycContainerProps> = ({
     const handleCropComplete = (croppedBlob: Blob) => {
         const file = new File([croppedBlob], "profile_picture.jpg", { type: "image/jpeg" });
         setFiles(p => ({ ...p, profilePicture: file }));
+        setCropper({ open: false, imageSrc: '' });
     };
 
     const handlePreviewFile = async (fileOrPublicId: File | string) => {

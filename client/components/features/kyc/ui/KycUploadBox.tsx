@@ -12,16 +12,18 @@ interface KycUploadBoxProps {
     onFileSelect: (file: File) => void;
     onRemove: () => void;
     onPreview: () => void;
+    accept?: string;
 }
 
 const KycUploadBox: React.FC<KycUploadBoxProps> = ({
-    fileKey, label, hint, file, error, onFileSelect, onRemove, onPreview
+    fileKey, label, hint, file, error, onFileSelect, onRemove, onPreview, accept = "image/*,application/pdf"
 }) => {
     const [isDragging, setIsDragging] = React.useState(false);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const f = e.target.files?.[0];
         if (f) onFileSelect(f);
+        e.target.value = ""; // Reset value so same file can be selected again
     };
 
     const handleDragOver = (e: React.DragEvent) => {
@@ -54,7 +56,7 @@ const KycUploadBox: React.FC<KycUploadBoxProps> = ({
             </Typography>
             
             <input 
-                accept="image/*,application/pdf" 
+                accept={accept} 
                 style={{ display: 'none' }} 
                 id={`file-${fileKey}`} 
                 type="file" 

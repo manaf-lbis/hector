@@ -33,6 +33,7 @@ const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
     const [crop, setCrop] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
     const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+    const [isProcessing, setIsProcessing] = useState(false);
 
     const onCropChange = (crop: { x: number, y: number }) => {
         setCrop(crop);
@@ -49,6 +50,7 @@ const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
     const handleSave = async () => {
         try {
             if (croppedAreaPixels && imageSrc) {
+                setIsProcessing(true);
                 const croppedImage = await getCroppedImg(imageSrc, croppedAreaPixels);
                 if (croppedImage) {
                     onCropComplete(croppedImage);
@@ -57,6 +59,8 @@ const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
             }
         } catch (e) {
             console.error(e);
+        } finally {
+            setIsProcessing(false);
         }
     };
 
@@ -108,15 +112,18 @@ const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
                     <Button 
                         variant="contained" 
                         onClick={handleSave}
+                        disabled={isProcessing}
                         sx={{ 
                             fontWeight: 800, 
                             textTransform: 'none', 
                             px: 4, 
                             borderRadius: 2,
-                            boxShadow: 'none'
+                            boxShadow: 'none',
+                            position: 'relative',
+                            minWidth: 140
                         }}
                     >
-                        Save & Apply
+                        {isProcessing ? 'Processing...' : 'Save & Apply'}
                     </Button>
                 </Box>
             </DialogActions>

@@ -5,7 +5,10 @@ export const createImage = (url: string): Promise<HTMLImageElement> =>
         const image = new Image();
         image.addEventListener("load", () => resolve(image));
         image.addEventListener("error", (error) => reject(error));
-        image.setAttribute("crossOrigin", "anonymous");
+        if (!url.startsWith('data:')) {
+            image.setAttribute("crossOrigin", "anonymous");
+        }
+        image.src = url;
     });
 
 export async function getCroppedImg(
@@ -21,35 +24,34 @@ export async function getCroppedImg(
         return null;
     }
 
-    const maxSize = Math.max(image.width, image.height);
-    const safeArea = 2 * ((maxSize / 2) * Math.sqrt(2));
+    const { x, y, width, height } = pixelCrop;
+    canvas.width = width;
+    canvas.height = height;
 
-    canvas.width = safeArea;
-    canvas.height = safeArea;
-
-    ctx.translate(safeArea / 2, safeArea / 2);
-    ctx.rotate((rotation * Math.PI) / 180);
-    ctx.translate(-safeArea / 2, -safeArea / 2);
+    if (rotation) {
+        const maxSize = Math.max(image.width, image.height);
+        const safeArea = 2 * ((maxSize / 2) * Math.sqrt(2));
+        
+        ctx.translate(width / 2, height / 2);
+        ctx.rotate((rotation * Math.PI) / 180);
+        ctx.translate(-width / 2, -height / 2);
+    }
 
     ctx.drawImage(
         image,
-        safeArea / 2 - image.width * 0.5,
-        safeArea / 2 - image.height * 0.5
-    );
-    const data = ctx.getImageData(0, 0, safeArea, safeArea);
-
-    canvas.width = pixelCrop.width;
-    canvas.height = pixelCrop.height;
-
-    ctx.putImageData(
-        data,
-        Math.round(0 - safeArea / 2 + image.width * 0.5 - pixelCrop.x),
-        Math.round(0 - safeArea / 2 + image.height * 0.5 - pixelCrop.y)
+        x,
+        y,
+        width,
+        height,
+        0,
+        0,
+        width,
+        height
     );
 
     return new Promise((resolve) => {
-        canvas.toBlob((file) => {
-            resolve(file);
-        }, "image/jpeg");
+        canvas.toBlob((blob) => {
+            resolve(blob);
+        }, "image/jpeg", 0.9);
     });
 }
