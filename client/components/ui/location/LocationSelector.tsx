@@ -28,17 +28,22 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({ open, onClose, curr
     const [updateLocation, { isLoading: isUpdating }] = useUpdateUserLocationMutation();
     
     // Default fallback to Kerala Kollam if nothing passed
-    const defaultLat = currentLocation?.lat || 8.8932;
-    const defaultLng = currentLocation?.lng || 76.6141;
+    const defaultLat = 8.8932;
+    const defaultLng = 76.6141;
 
-    const [selectedPos, setSelectedPos] = useState({ lat: defaultLat, lng: defaultLng });
+    const [selectedPos, setSelectedPos] = useState({ 
+        lat: Number.isFinite(currentLocation?.lat) ? currentLocation!.lat : defaultLat, 
+        lng: Number.isFinite(currentLocation?.lng) ? currentLocation!.lng : defaultLng 
+    });
     const [selectedAddress, setSelectedAddress] = useState(currentLocation?.address || '');
     const [selectedCity, setSelectedCity] = useState(currentLocation?.city || '');
     const [selectedState, setSelectedState] = useState(currentLocation?.state || '');
 
     useEffect(() => {
         if (open && currentLocation) {
-            setSelectedPos({ lat: currentLocation.lat, lng: currentLocation.lng });
+            const lat = Number.isFinite(currentLocation.lat) ? currentLocation.lat : defaultLat;
+            const lng = Number.isFinite(currentLocation.lng) ? currentLocation.lng : defaultLng;
+            setSelectedPos({ lat, lng });
             setSelectedAddress(currentLocation.address || '');
             setSelectedCity(currentLocation.city || '');
             setSelectedState(currentLocation.state || '');

@@ -26,11 +26,14 @@ const MapSelection: React.FC<MapSelectionProps> = ({ center, zoom = 14, onMapCli
         mapRef.current = null;
     }, []);
 
+    const isValidCenter = center && Number.isFinite(center.lat) && Number.isFinite(center.lng);
+    const validCenter = isValidCenter ? center : { lat: 8.8932, lng: 76.6141 };
+
     return (
         <Box sx={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', borderRadius: 2 }}>
             <GoogleMap
                 mapContainerStyle={mapContainerStyle}
-                center={center}
+                center={validCenter}
                 zoom={zoom}
                 onLoad={onLoad}
                 onUnmount={onUnmount}
@@ -46,7 +49,7 @@ const MapSelection: React.FC<MapSelectionProps> = ({ center, zoom = 14, onMapCli
                 }}
             >
                 {/* Marker is strictly fixed to the prop center */}
-                <Marker position={center} />
+                <Marker position={validCenter} />
             </GoogleMap>
         </Box>
     );
