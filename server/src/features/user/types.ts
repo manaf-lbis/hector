@@ -11,8 +11,8 @@ export enum UserStatus {
 }
 
 export interface ILocation {
-    lat: number;
-    lng: number;
+    type: "Point";
+    coordinates: [number, number]; // [longitude, latitude]
     address?: string;
     city?: string;
     state?: string;

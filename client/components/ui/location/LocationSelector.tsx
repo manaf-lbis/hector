@@ -7,11 +7,12 @@ import { useJsApiLoader } from '@react-google-maps/api';
 import LocationSearch from './LocationSearch';
 import MapSelection from './MapSelection';
 import { useUpdateUserLocationMutation } from '@/store/api/auth.api';
+import { ILocation } from '@/types/user.type';
 
 interface LocationSelectorProps {
     open: boolean;
     onClose: () => void;
-    currentLocation?: { lat: number; lng: number; address?: string; city?: string; state?: string };
+    currentLocation?: ILocation;
 }
 
 const libraries: "places"[] = ["places"];
@@ -19,29 +20,42 @@ const libraries: "places"[] = ["places"];
 const LocationSelector: React.FC<LocationSelectorProps> = ({ open, onClose, currentLocation }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-    
+
     const { isLoaded, loadError } = useJsApiLoader({
         googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
         libraries,
     });
 
     const [updateLocation, { isLoading: isUpdating }] = useUpdateUserLocationMutation();
-    
-    // Default fallback to Kerala Kollam if nothing passed
-    const defaultLat = currentLocation?.lat || 8.8932;
-    const defaultLng = currentLocation?.lng || 76.6141;
 
-    const [selectedPos, setSelectedPos] = useState({ lat: defaultLat, lng: defaultLng });
+    const defaultLat = 8.8932;
+    const defaultLng = 76.6141;
+
+    const [selectedPos, setSelectedPos] = useState({
+        lat: Number.isFinite(currentLocation?.coordinates?.[1]) ? currentLocation!.coordinates[1] : defaultLat,
+        lng: Number.isFinite(currentLocation?.coordinates?.[0]) ? currentLocation!.coordinates[0] : defaultLng
+    });
     const [selectedAddress, setSelectedAddress] = useState(currentLocation?.address || '');
     const [selectedCity, setSelectedCity] = useState(currentLocation?.city || '');
     const [selectedState, setSelectedState] = useState(currentLocation?.state || '');
 
     useEffect(() => {
-        if (open && currentLocation) {
-            setSelectedPos({ lat: currentLocation.lat, lng: currentLocation.lng });
-            setSelectedAddress(currentLocation.address || '');
-            setSelectedCity(currentLocation.city || '');
-            setSelectedState(currentLocation.state || '');
+        if (open) {
+            const hasValidCoords = Number.isFinite(currentLocation?.coordinates?.[1]) &&
+                Number.isFinite(currentLocation?.coordinates?.[0]);
+
+            const lat = hasValidCoords ? currentLocation!.coordinates[1] : defaultLat;
+            const lng = hasValidCoords ? currentLocation!.coordinates[0] : defaultLng;
+
+            setSelectedPos({ lat, lng });
+
+            if (currentLocation?.address) {
+                setSelectedAddress(currentLocation.address);
+                setSelectedCity(currentLocation.city || '');
+                setSelectedState(currentLocation.state || '');
+            } else {
+                reverseGeocode(lat, lng);
+            }
         }
     }, [open, currentLocation]);
 
@@ -53,7 +67,7 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({ open, onClose, curr
                 const result = results[0];
                 let city = '';
                 let state = '';
-                
+
                 result.address_components.forEach((component) => {
                     if (component.types.includes('locality')) city = component.long_name;
                     if (component.types.includes('administrative_area_level_1')) state = component.long_name;
@@ -115,16 +129,16 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({ open, onClose, curr
     const content = (
         <Box sx={{ p: { xs: 2.5, sm: 3 }, height: '100%', display: 'flex', flexDirection: 'column', position: 'relative' }}>
             {isMobile && (
-                <Box 
-                    sx={{ 
-                        width: 40, 
-                        height: 4, 
-                        bgcolor: 'action.hover', 
-                        borderRadius: 2, 
-                        alignSelf: 'center', 
+                <Box
+                    sx={{
+                        width: 40,
+                        height: 4,
+                        bgcolor: 'action.hover',
+                        borderRadius: 2,
+                        alignSelf: 'center',
                         mb: 2,
                         mt: -1
-                    }} 
+                    }}
                 />
             )}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
@@ -133,7 +147,7 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({ open, onClose, curr
             </Box>
 
             {loadError && <Typography color="error">Error loading maps</Typography>}
-            
+
             {!isLoaded ? (
                 <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                     <CircularProgress />
@@ -144,9 +158,9 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({ open, onClose, curr
                         <LocationSearch onSelect={handleSearchSelect} />
                     </Box>
 
-                    <AppButton 
+                    <AppButton
                         variant="text"
-                        startIcon={<MyLocationIcon />} 
+                        startIcon={<MyLocationIcon />}
                         onClick={handleLocateMe}
                         sx={{ mb: 2, justifyContent: 'flex-start' }}
                     >
@@ -161,9 +175,9 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({ open, onClose, curr
                         <Typography variant="caption" color="text.secondary" fontWeight="700" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
                             Selected Location
                         </Typography>
-                        <Typography variant="body2" fontWeight="600" color="text.primary" sx={{ 
-                            overflow: 'hidden', 
-                            textOverflow: 'ellipsis', 
+                        <Typography variant="body2" fontWeight="600" color="text.primary" sx={{
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
                             display: '-webkit-box',
                             WebkitLineClamp: 2,
                             WebkitBoxOrient: 'vertical',
@@ -172,11 +186,11 @@ const LocationSelector: React.FC<LocationSelectorProps> = ({ open, onClose, curr
                         }}>
                             {selectedAddress || 'Drop a pin on the map'}
                         </Typography>
-                        
-                        <AppButton 
-                            variant="contained" 
-                            fullWidth 
-                            size="large" 
+
+                        <AppButton
+                            variant="contained"
+                            fullWidth
+                            size="large"
                             onClick={handleConfirm}
                             disabled={isUpdating || !selectedAddress}
                             loading={isUpdating}

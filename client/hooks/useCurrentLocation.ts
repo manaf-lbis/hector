@@ -53,7 +53,11 @@ export const useCurrentLocation = (user: any) => {
     };
 
     const synchronizeLocation = useCallback(async () => {
-        if (!user || user.location || !apiKey) return;
+        const hasValidLocation = !!(user?.location?.coordinates && 
+                                 Number.isFinite(user.location.coordinates[1]) && 
+                                 Number.isFinite(user.location.coordinates[0]));
+
+        if (!user || hasValidLocation || !apiKey) return;
 
         setIsLoading(true);
         setError(null);

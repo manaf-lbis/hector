@@ -102,18 +102,19 @@ const LocationSearch: React.FC<LocationSearchProps> = ({ onSelect, placeholder =
             renderOption={(props, option) => {
                 const { key, ...restProps } = props as any;
                 return (
-                <li key={key} {...restProps}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', p: 1 }}>
-                        <LocationOnIcon sx={{ color: 'text.secondary', mr: 2 }} />
-                        <Typography variant="body2" color="text.primary">
-                            {option.structured_formatting?.main_text || option.description}
-                            <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 1 }}>
-                                {option.structured_formatting?.secondary_text}
+                    <li key={key} {...restProps}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', p: 1 }}>
+                            <LocationOnIcon sx={{ color: 'text.secondary', mr: 2 }} />
+                            <Typography variant="body2" color="text.primary">
+                                {option.structured_formatting?.main_text || option.description}
+                                <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                                    {option.structured_formatting?.secondary_text}
+                                </Typography>
                             </Typography>
-                        </Typography>
-                    </Box>
-                </li>
-            )}}
+                        </Box>
+                    </li>
+                )
+            }}
         />
     );
 };
