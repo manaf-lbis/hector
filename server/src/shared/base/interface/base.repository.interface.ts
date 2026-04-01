@@ -11,4 +11,6 @@ export interface IBaseRepository<T> {
   upsert(query: QueryFilter<T>, data: Partial<T>): Promise<T>;
   delete(id: Types.ObjectId): Promise<T | null>;
   findOneAndUpdate(query: QueryFilter<T>, data: Partial<T>): Promise<T | null>;
+  updateMany(query: QueryFilter<T>, data: Partial<T>): Promise<any>;
+  deleteMany(query: QueryFilter<T>): Promise<any>;
 }

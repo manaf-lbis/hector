@@ -10,7 +10,8 @@ import {
     Avatar,
     Button,
     Grid,
-    Stack
+    Stack,
+    IconButton
 } from '@mui/material';
 import { 
     AssignmentInd as KycIcon,
@@ -20,12 +21,16 @@ import {
     Visibility as VisibilityIcon,
     Schedule as ClockIcon
 } from '@mui/icons-material';
-import { useGetPendingKycQuery } from '@/store/api/kyc.api';
+import { 
+    useGetPendingKycQuery, 
+    useBulkReviewKycMutation 
+} from '@/store/api/kyc.api';
 import AdminPageHeader from '@/components/ui/admin/AdminPageHeader';
 import AdminStatsCard from '@/components/ui/admin/AdminStatsCard';
 import AdminTable, { AdminTableColumn } from '@/components/ui/admin/AdminTable';
 import AdminSearch from '@/components/ui/admin/AdminSearch';
 import AdminFilter from '@/components/ui/admin/AdminFilter';
+import BulkActionBanner, { BulkAction } from '@/components/ui/admin/BulkActionBanner';
 import AppButton from '@/components/ui/AppButton';
 import { useRouter } from 'next/navigation';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -34,6 +39,9 @@ export default function AdminKycPage() {
     const router = useRouter();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedStatus, setSelectedStatus] = useState('all');
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+    const [bulkReviewKyc] = useBulkReviewKycMutation();
     
     const debouncedSearch = useDebounce(searchTerm, 500);
 
@@ -61,26 +69,35 @@ export default function AdminKycPage() {
         {
             id: 'user',
             label: 'User Details',
-            render: (kyc: any) => (
+            render: (kyc: any) => {
+                const user = kyc.user;
+                const profilePic = user?.kycData?.profilePicture || user?.kyc?.profilePicture;
+                const picUrl = profilePic ? `${process.env.NEXT_PUBLIC_API_URI || 'http://localhost:3001/api'}/kyc/files/${profilePic}` : undefined;
+
+                return (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                     <Avatar 
+                        src={picUrl}
                         sx={{ 
                             width: 36, height: 36, 
+                            borderRadius: '10px',
                             bgcolor: alpha('#1B8A5A', 0.1), 
                             color: '#1B8A5A',
-                            fontWeight: 700
+                            fontWeight: 800,
+                            fontSize: '0.9rem',
+                            border: `1.5px solid ${alpha('#1B8A5A', profilePic ? 0.3 : 0.1)}`
                         }}
                     >
-                        {kyc.user?.name?.charAt(0).toUpperCase() || '?'}
+                        {user?.name?.charAt(0).toUpperCase() || '?'}
                     </Avatar>
                     <Box>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             <Typography variant="body2" sx={{ fontWeight: 800 }}>
-                                {kyc.user?.name || 'Unknown'}
+                                {user?.name || 'Unknown'}
                             </Typography>
-                            {kyc.user?.customId && (
+                            {user?.customId && (
                                 <Chip 
-                                    label={`ID: ${kyc.user.customId}`} 
+                                    label={`ID: ${user.customId}`} 
                                     size="small" 
                                     sx={{ 
                                         height: 20, 
@@ -93,12 +110,19 @@ export default function AdminKycPage() {
                                 />
                             )}
                         </Box>
-                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                            {kyc.user?.email}
+                        <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500, display: 'block' }}>
+                            {user?.email}
                         </Typography>
+                        {user?.lastLogin && (
+                            <Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 700, fontSize: '0.65rem', display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.2 }}>
+                                <ClockIcon sx={{ fontSize: '10px' }} />
+                                LAST LOGIN: {new Date(user.lastLogin).toLocaleDateString()}
+                            </Typography>
+                        )}
                     </Box>
                 </Box>
-            )
+                );
+            }
         },
         {
             id: 'documentType',
@@ -128,13 +152,17 @@ export default function AdminKycPage() {
             label: 'Action',
             align: 'right',
             render: (kyc: any) => (
-                <AppButton 
-                    variant="outlined" 
+                <IconButton 
                     size="small" 
                     onClick={(e) => { e.stopPropagation(); handleRowClick(kyc); }}
+                    sx={{ 
+                        color: 'primary.main', 
+                        bgcolor: alpha('#1B8A5A', 0.05),
+                        '&:hover': { bgcolor: alpha('#1B8A5A', 0.1) }
+                    }}
                 >
-                    Review Application
-                </AppButton>
+                    <VisibilityIcon fontSize="small" />
+                </IconButton>
             )
         }
     ];
@@ -152,6 +180,24 @@ export default function AdminKycPage() {
         { label: 'Approved', value: 'approved', count: result?.counts?.approved },
         { label: 'Returned', value: 'returned', count: result?.counts?.returned },
         { label: 'Rejected', value: 'rejected', count: result?.counts?.rejected }
+    ];
+
+    const handleBulkApprove = async () => {
+        try {
+            await bulkReviewKyc({ kycIds: selectedIds, status: 'approved' }).unwrap();
+            setSelectedIds([]);
+        } catch (error) {
+            console.error('Bulk approve failed:', error);
+        }
+    };
+
+    const bulkActions: BulkAction[] = [
+        { 
+            label: 'Approve Selected', 
+            onClick: handleBulkApprove, 
+            color: 'success',
+            icon: <ApprovedIcon fontSize="small" />
+        }
     ];
 
     return (
@@ -173,7 +219,7 @@ export default function AdminKycPage() {
                 <AdminSearch 
                     value={searchTerm} 
                     onChange={setSearchTerm} 
-                    placeholder="Search by User Name or Email..."
+                    placeholder="Search by Name, Email or ID (#...)"
                 />
                 <AdminFilter 
                     options={filterOptions} 
@@ -193,13 +239,35 @@ export default function AdminKycPage() {
                 rowsPerPage={filteredKyc.length}
                 onPageChange={() => {}} 
                 onRowClick={handleRowClick}
-                renderMobileCard={(kyc) => (
+                selectedIds={selectedIds}
+                onSelectionChange={setSelectedIds}
+                renderMobileCard={(kyc) => {
+                    const user = kyc.user;
+                    const profilePic = user?.kycData?.profilePicture || user?.kyc?.profilePicture;
+                    const picUrl = profilePic ? `${process.env.NEXT_PUBLIC_API_URI || 'http://localhost:3001/api'}/kyc/files/${profilePic}` : undefined;
+
+                    return (
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                            <Avatar sx={{ bgcolor: alpha('#1B8A5A', 0.1), color: '#1B8A5A' }}>{kyc.user?.name[0]}</Avatar>
+                            <Avatar 
+                                src={picUrl}
+                                sx={{ 
+                                    bgcolor: alpha('#1B8A5A', 0.1), 
+                                    color: '#1B8A5A',
+                                    borderRadius: '8px',
+                                    fontWeight: 700
+                                }}
+                            >
+                                {user?.name[0] || '?'}
+                            </Avatar>
                             <Box>
-                                <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{kyc.user?.name}</Typography>
-                                <Typography variant="caption" sx={{ color: 'text.secondary' }}>{kyc.documentType}</Typography>
+                                <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{user?.name || 'Unknown'}</Typography>
+                                <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>{kyc.documentType} • ID: {user?.customId}</Typography>
+                                {user?.lastLogin && (
+                                    <Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 700, fontSize: '0.6rem' }}>
+                                        Seen: {new Date(user.lastLogin).toLocaleDateString()}
+                                    </Typography>
+                                )}
                             </Box>
                         </Box>
                         <Chip 
@@ -208,7 +276,14 @@ export default function AdminKycPage() {
                             color={kyc.kycStatus === 'approved' ? 'success' : kyc.kycStatus === 'rejected' ? 'error' : 'warning'}
                         />
                     </Box>
-                )}
+                    );
+                }}
+            />
+
+            <BulkActionBanner
+                selectedCount={selectedIds.length}
+                onClear={() => setSelectedIds([])}
+                actions={bulkActions}
             />
         </Container>
     );

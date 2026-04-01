@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import mongoose, { Types } from "mongoose";
 import { IUserService } from "./interface/user.services.interface";
 import { sendSuccess } from "../../shared/utility/api.success";
+import ApiError from "../../shared/utility/api.error";
 
 export class UserController {
     constructor(private _userService: IUserService) { }
@@ -12,7 +13,8 @@ export class UserController {
             const limit = parseInt(req.query.limit as string) || 10;
             const search = req.query.search as string;
             const status = req.query.status as string;
-            const result = await this._userService.getAllUsers(page, limit, search, status);
+            const me = (req as any).user?.userId;
+            const result = await this._userService.getAllUsers(page, limit, search, status, me);
             sendSuccess(res, result, "Users retrieved successfully");
         } catch (error) {
             next(error);
@@ -56,6 +58,22 @@ export class UserController {
 
             const user = await this._userService.updateUserStatus(id as string, status as any);
             sendSuccess(res, user, `User status updated to ${status}`);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async bulkUpdateUserStatus(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { userIds, status } = req.body;
+            const me = (req as any).user?.userId?.toString();
+            
+            if (userIds.map((id: any) => id.toString()).includes(me) && status === 'blocked') {
+                throw new ApiError("You cannot block your own account in bulk operations", 400);
+            }
+
+            const result = await this._userService.bulkUpdateUserStatus(userIds, status);
+            sendSuccess(res, { count: userIds.length }, `Bulk updated ${userIds.length} users to ${status}`);
         } catch (error) {
             next(error);
         }

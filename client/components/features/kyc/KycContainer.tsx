@@ -15,7 +15,7 @@ import UploadStep from './steps/UploadStep';
 import ReviewStep from './steps/ReviewStep';
 import KycPreviewModal from './ui/KycPreviewModal';
 import KycPolicyModal from './ui/KycPolicyModal';
-import ImageCropperModal from './ui/ImageCropperModal';
+import ImageCropperModal from '@/components/ui/ImageCropperModal';
 import DocumentViewer from '@/components/ui/DocumentViewer';
 import KycStatusAlert from './ui/KycStatusAlert';
 

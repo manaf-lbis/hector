@@ -4,6 +4,7 @@ import { IUserRepo } from "./interface/user.repository.interface";
 import { IUserService } from "./interface/user.services.interface";
 import { IUser, Roles, UserStatus } from "./types";
 import { LoginLogModel } from "./models/loginLog.model";
+import { UserModel } from "./models/user.model";
 
 export class UserService implements IUserService {
 
@@ -60,13 +61,17 @@ export class UserService implements IUserService {
         return user;
     }
 
-    async getAllUsers(page: number = 1, limit: number = 10, search?: string, status?: string): Promise<{
+    async getAllUsers(page: number = 1, limit: number = 10, search?: string, status?: string, excludeId?: string): Promise<{
         users: IUser[],
         total: number,
         counts: { [key: string]: number }
     }> {
         const skip = (page - 1) * limit;
         const query: any = {};
+
+        if (excludeId) {
+            query._id = { $ne: new Types.ObjectId(excludeId) };
+        }
 
         if (status && status !== 'all') {
             query.status = status;
@@ -81,63 +86,54 @@ export class UserService implements IUserService {
             ];
         }
 
-        const [users, total, countResults] = await Promise.all([
-            await this._userRepo.findAll().then(res => {
-
-                let filtered = res;
-                if (status && status !== 'all') filtered = filtered.filter(u => u.status === status);
-                if (search) {
-                    const regex = new RegExp(search, 'i');
-                    filtered = filtered.filter(u =>
-                        regex.test(u.name) ||
-                        regex.test(u.email) ||
-                        (u as any).customId && regex.test((u as any).customId)
-                    );
-                }
-                return filtered.slice(skip, skip + limit);
-            }),
-            await this._userRepo.findAll().then(res => {
-                let filtered = res;
-                if (status && status !== 'all') filtered = filtered.filter(u => u.status === status);
-                if (search) {
-                    const regex = new RegExp(search, 'i');
-                    filtered = filtered.filter(u =>
-                        regex.test(u.name) ||
-                        regex.test(u.email) ||
-                        (u as any).customId && regex.test((u as any).customId)
-                    );
-                }
-                return filtered.length;
-            }),
-            await this._userRepo.findAll().then(res => {
-                let baseData = res;
-                if (search) {
-                    const regex = new RegExp(search, 'i');
-                    baseData = baseData.filter(u =>
-                        regex.test(u.name) ||
-                        regex.test(u.email) ||
-                        (u as any).customId && regex.test((u as any).customId)
-                    );
-                }
-                const counts: { [key: string]: number } = { all: baseData.length };
-                baseData.forEach(u => {
-                    counts[u.status] = (counts[u.status] || 0) + 1;
-                });
-                return counts;
-            })
+        // Use aggregation to perform lookup for kyc data
+        const [results, total, allForCounts] = await Promise.all([
+            UserModel.aggregate([
+                { $match: query },
+                { $sort: { createdAt: -1 } },
+                { $skip: skip },
+                { $limit: limit },
+                {
+                    $lookup: {
+                        from: 'kycs',
+                        localField: '_id',
+                        foreignField: 'user',
+                        as: 'kyc_lookup'
+                    }
+                },
+                {
+                    $addFields: {
+                        kyc: { $arrayElemAt: ['$kyc_lookup', 0] },
+                        kycData: { $arrayElemAt: ['$kyc_lookup', 0] }
+                    }
+                },
+                { $project: { kyc_lookup: 0 } }
+            ]).exec(),
+            UserModel.countDocuments(query).exec(),
+            UserModel.aggregate([
+                { $match: { ...query, status: { $exists: true } } },
+                { $group: { _id: "$status", count: { $sum: 1 } } }
+            ]).exec()
         ]);
 
-        return { users, total, counts: countResults };
+        const counts: { [key: string]: number } = { all: total };
+        allForCounts.forEach((record: any) => {
+            counts[record._id] = record.count;
+        });
+
+        return { users: results as IUser[], total, counts };
     }
 
     async recordLogin(userId: Types.ObjectId, ip?: string, userAgent?: string): Promise<void> {
-        await this._userRepo.update(userId, { lastLogin: new Date() } as any);
-        await LoginLogModel.create({
-            user: userId,
-            ip,
-            userAgent,
-            loggedInAt: new Date()
-        });
+        await Promise.all([
+            LoginLogModel.create({
+                user: userId,
+                ip,
+                userAgent,
+                loggedInAt: new Date()
+            }),
+            UserModel.findByIdAndUpdate(userId, { lastLogin: new Date() })
+        ]);
     }
 
     async getLoginLogs(userId: string, limit: number): Promise<any[]> {
@@ -151,5 +147,9 @@ export class UserService implements IUserService {
         const user = await this._userRepo.update(new Types.ObjectId(userId), { status } as any);
         if (!user) throw new ApiError("User not found");
         return user;
+    }
+
+    async bulkUpdateUserStatus(userIds: string[], status: UserStatus): Promise<any> {
+        return await UserModel.updateMany({ _id: { $in: userIds } }, { status }).exec();
     }
 }

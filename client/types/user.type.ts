@@ -16,6 +16,9 @@ export interface IUser {
         profilePicture?: string;
         [key: string]: any;
     };
+    kyc?: {
+        profilePicture?: string;
+    };
 }
 
 export interface AuthState {

@@ -6,6 +6,7 @@ import UserProfile from "../ui/navbar/UserProfile";
 import AppDrawer, { NavCategory } from "../ui/navbar/AppDrawer";
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import LogoutIcon from '@mui/icons-material/Logout';
+import CategoryIcon from '@mui/icons-material/Category';
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store";
 import { useRouter } from "next/navigation";
@@ -16,7 +17,9 @@ import { useLogoutMutation } from "@/store/api/auth.api";
 import GridViewIcon from '@mui/icons-material/GridView';
 import PeopleIcon from '@mui/icons-material/People';
 import assignmentIndIcon from '@mui/icons-material/AssignmentInd';
+import NotificationsIcon from '@mui/icons-material/Notifications';
 import { keyframes } from "@mui/system";
+import { Badge } from "@mui/material";
 
 const pulse = keyframes`
   0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(46, 125, 50, 0.4); }
@@ -59,10 +62,11 @@ const AdminNavbar = () => {
             ]
         },
         {
-            title: 'User',
+            title: 'Management',
             items: [
                 { id: 3, label: 'Users', icon: PeopleIcon, action: () => router.push('/admin/users') },
                 { id: 4, label: 'KYC', icon: assignmentIndIcon, action: () => router.push('/admin/kyc') },
+                { id: 5, label: 'Categories', icon: CategoryIcon, action: () => router.push('/admin/categories') },
             ]
         }
     ];
@@ -129,7 +133,13 @@ const AdminNavbar = () => {
                         <Box sx={{ flexGrow: 1 }} />
 
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <Box sx={{ pointerEvents: 'none' }}>
+                            <IconButton size="small" sx={{ color: 'text.secondary', bgcolor: 'action.hover' }}>
+                                <Badge variant="dot" color="error">
+                                    <NotificationsIcon fontSize="small" />
+                                </Badge>
+                            </IconButton>
+
+                            <Box>
                                 <UserProfile user={user} position="right" />
                             </Box>
                             <AppDrawer 

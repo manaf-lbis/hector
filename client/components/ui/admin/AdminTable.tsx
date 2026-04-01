@@ -38,6 +38,8 @@ interface AdminTableProps {
     onRowClick?: (row: any) => void;
     renderMobileCard?: (row: any) => React.ReactNode;
     showCheckboxes?: boolean;
+    selectedIds?: string[];
+    onSelectionChange?: (ids: string[]) => void;
 }
 
 const AdminTable: React.FC<AdminTableProps> = ({
@@ -51,7 +53,9 @@ const AdminTable: React.FC<AdminTableProps> = ({
     onRowsPerPageChange,
     onRowClick,
     renderMobileCard,
-    showCheckboxes = true
+    showCheckboxes = true,
+    selectedIds = [],
+    onSelectionChange
 }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -103,7 +107,18 @@ const AdminTable: React.FC<AdminTableProps> = ({
                         <TableRow>
                             {showCheckboxes && (
                                 <TableCell padding="checkbox" sx={{ bgcolor: alpha(theme.palette.primary.main, 0.02), py: 2.5 }}>
-                                    <Checkbox size="small" />
+                                    <Checkbox 
+                                        size="small" 
+                                        indeterminate={selectedIds.length > 0 && selectedIds.length < data.length}
+                                        checked={data.length > 0 && selectedIds.length === data.length}
+                                        onChange={(e) => {
+                                            if (e.target.checked) {
+                                                onSelectionChange?.(data.map(row => row._id));
+                                            } else {
+                                                onSelectionChange?.([]);
+                                            }
+                                        }}
+                                    />
                                 </TableCell>
                             )}
                             {columns.map((column) => (
@@ -142,7 +157,18 @@ const AdminTable: React.FC<AdminTableProps> = ({
                             >
                                 {showCheckboxes && (
                                     <TableCell padding="checkbox" sx={{ borderBottom: `1px solid ${alpha(theme.palette.divider, 0.05)}` }}>
-                                        <Checkbox size="small" onClick={(e) => e.stopPropagation()} />
+                                        <Checkbox 
+                                            size="small" 
+                                            checked={selectedIds.includes(row._id)}
+                                            onChange={(e) => {
+                                                e.stopPropagation();
+                                                const newSelected = e.target.checked
+                                                    ? [...selectedIds, row._id]
+                                                    : selectedIds.filter(id => id !== row._id);
+                                                onSelectionChange?.(newSelected);
+                                            }}
+                                            onClick={(e) => e.stopPropagation()} 
+                                        />
                                     </TableCell>
                                 )}
                                 {columns.map((column) => (

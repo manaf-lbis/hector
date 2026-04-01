@@ -39,12 +39,18 @@ export class KycService implements IKycService {
             createdAt: new Date()
         };
 
-        return await this._kycRepo.createKyc({
+        const kyc = await this._kycRepo.createKyc({
             ...data,
             user: userId as any,
             kycStatus: KycStatus.PENDING,
             history: [historyEntry]
         });
+
+        // Link KYC back to User for population support
+        const mongoose = require('mongoose');
+        await mongoose.model('User').findByIdAndUpdate(userId, { kyc: kyc._id });
+
+        return kyc;
     }
 
     async getKycStatus(userId: string): Promise<IKyc | null> {
@@ -70,7 +76,8 @@ export class KycService implements IKycService {
             const regex = new RegExp(search, 'i');
             filtered = filtered.filter(k => 
                 (k.user as any)?.name?.match(regex) || 
-                (k.user as any)?.email?.match(regex)
+                (k.user as any)?.email?.match(regex) ||
+                (k.user as any)?.customId?.match(regex)
             );
         }
 
@@ -98,5 +105,9 @@ export class KycService implements IKycService {
             total: filtered.length,
             counts
         };
+    }
+
+    async bulkReviewKyc(kycIds: string[], status: KycStatus, adminId: string, reason?: string, adminName?: string, adminRole?: string): Promise<any> {
+        return await this._kycRepo.bulkUpdateKycStatus(kycIds, status, adminId, reason, adminName, adminRole);
     }
 }

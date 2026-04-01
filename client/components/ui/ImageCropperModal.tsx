@@ -10,7 +10,6 @@ import {
     Box,
     Slider,
     Typography,
-    alpha
 } from '@mui/material';
 import Cropper, { Area } from 'react-easy-crop';
 import { getCroppedImg } from '@/utils/imageUtils';
@@ -21,6 +20,8 @@ interface ImageCropperModalProps {
     onClose: () => void;
     onCropComplete: (croppedImage: Blob) => void;
     aspectRatio?: number;
+    cropShape?: 'round' | 'rect';
+    title?: string;
 }
 
 const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
@@ -28,7 +29,9 @@ const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
     imageSrc,
     onClose,
     onCropComplete,
-    aspectRatio = 1
+    aspectRatio = 1,
+    cropShape = 'round',
+    title = 'Crop Image'
 }) => {
     const [crop, setCrop] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
@@ -75,7 +78,7 @@ const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
             }}
         >
             <DialogTitle sx={{ fontWeight: 800, borderBottom: '1px solid', borderColor: 'divider' }}>
-                Crop Profile Picture
+                {title}
             </DialogTitle>
             <DialogContent sx={{ p: 0, height: 400, position: 'relative', bgcolor: '#000' }}>
                 <Cropper
@@ -86,7 +89,7 @@ const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
                     onCropChange={onCropChange}
                     onCropComplete={onCropCompleteInternal}
                     onZoomChange={onZoomChange}
-                    cropShape="round"
+                    cropShape={cropShape}
                     showGrid={false}
                 />
             </DialogContent>

@@ -74,6 +74,14 @@ export const kycApi = createApi({
             }),
             invalidatesTags: ['Kyc'],
         }),
+        bulkReviewKyc: builder.mutation<any, { kycIds: string[], status: string, reason?: string }>({
+            query: (body) => ({
+                url: '/kyc/bulk-review',
+                method: 'POST',
+                body,
+            }),
+            invalidatesTags: ['Kyc'],
+        }),
     }),
 });
 
@@ -83,5 +91,6 @@ export const {
     useGetPrivacyPolicyQuery, 
     useGetKycConfigQuery,
     useGetPendingKycQuery,
-    useReviewKycMutation
+    useReviewKycMutation,
+    useBulkReviewKycMutation
 } = kycApi;

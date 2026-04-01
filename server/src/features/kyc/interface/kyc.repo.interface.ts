@@ -8,4 +8,5 @@ export interface IKycRepository extends IBaseRepository<IKyc> {
     updateKycStatus(id: string, status: KycStatus, adminId: string, reason?: string, adminName?: string, adminRole?: string): Promise<IKyc | null>;
     updateKycData(userId: string, data: Partial<IKyc>): Promise<IKyc | null>;
     getAllKycList(status?: KycStatus): Promise<IKyc[]>;
+    bulkUpdateKycStatus(ids: string[], status: KycStatus, adminId: string, reason?: string, adminName?: string, adminRole?: string): Promise<any>;
 }

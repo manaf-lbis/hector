@@ -6,13 +6,12 @@ import {
     DialogTitle, 
     DialogContent, 
     DialogActions, 
-    Button, 
     Typography, 
     TextField, 
     Box, 
-    alpha,
-    CircularProgress
+    alpha
 } from '@mui/material';
+import AppButton from '@/components/ui/AppButton';
 import { 
     CheckCircle as ApproveIcon, 
     Cancel as RejectIcon, 
@@ -138,28 +137,29 @@ const AdminActionModal: React.FC<AdminActionModalProps> = ({
             </DialogContent>
 
             <DialogActions sx={{ p: 3, pt: 1 }}>
-                <Button 
+                <AppButton 
+                    variant="text"
                     onClick={onClose} 
                     disabled={loading}
                     sx={{ color: 'text.secondary', fontWeight: 700, px: 3 }}
                 >
                     Cancel
-                </Button>
-                <Button 
+                </AppButton>
+                <AppButton 
                     variant="contained" 
                     onClick={handleConfirm}
-                    disabled={loading}
+                    loading={loading}
                     sx={{ 
-                        bgcolor: current.color, 
-                        '&:hover': { bgcolor: alpha(current.color, 0.8) },
+                        bgcolor: `${current.color} !important`, 
+                        '&:hover': { bgcolor: `${alpha(current.color, 0.8)} !important` },
                         fontWeight: 800,
                         borderRadius: 3,
                         px: 4,
                         boxShadow: `0 4px 14px ${alpha(current.color, 0.4)}`
                     }}
                 >
-                    {loading ? <CircularProgress size={24} color="inherit" /> : current.btnText}
-                </Button>
+                    {current.btnText}
+                </AppButton>
             </DialogActions>
         </Dialog>
     );

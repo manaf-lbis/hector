@@ -9,4 +9,5 @@ export interface IKycService {
         total: number,
         counts: { [key: string]: number }
     }>;
+    bulkReviewKyc(kycIds: string[], status: KycStatus, adminId: string, reason?: string, adminName?: string, adminRole?: string): Promise<any>;
 }

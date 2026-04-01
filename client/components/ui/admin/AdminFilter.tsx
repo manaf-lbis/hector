@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box, Chip, alpha, Badge, Typography, Button } from '@mui/material';
+import { Box, Chip, alpha, Badge, Typography } from '@mui/material';
+import AppButton from '../AppButton';
 import { FilterList as FilterIcon, Close as CloseIcon } from '@mui/icons-material';
 
 interface FilterOption {
@@ -77,13 +78,15 @@ const AdminFilter: React.FC<AdminFilterProps> = ({ options, activeValue, onSelec
             ))}
 
             {showClear && onClear && (
-                <Button
+                <AppButton
+                    variant="text"
                     size="small"
                     onClick={onClear}
                     startIcon={<CloseIcon sx={{ fontSize: 14 }} />}
                     sx={{ 
                         ml: 1, 
                         height: 32, 
+                        minWidth: 'auto',
                         borderRadius: '8px',
                         textTransform: 'none',
                         fontWeight: 600,
@@ -95,7 +98,7 @@ const AdminFilter: React.FC<AdminFilterProps> = ({ options, activeValue, onSelec
                     }}
                 >
                     Clear Filters
-                </Button>
+                </AppButton>
             )}
         </Box>
     );

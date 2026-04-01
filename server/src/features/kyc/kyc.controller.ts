@@ -96,6 +96,29 @@ export class KycController {
             next(error);
         }
     }
+
+    async bulkReviewKyc(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { kycIds, status, reason } = req.body;
+            const adminId = (req as any).user.userId;
+
+            if (![KycStatus.APPROVED, KycStatus.REJECTED, KycStatus.RETURNED].includes(status)) {
+                throw new ApiError("Invalid status", 400);
+            }
+
+            if ((status === KycStatus.REJECTED || status === KycStatus.RETURNED) && !reason) {
+                throw new ApiError(`Reason is required for ${status}`, 400);
+            }
+
+            const adminName = (req as any).user.name;
+            const adminRole = (req as any).user.role;
+
+            const result = await this._kycService.bulkReviewKyc(kycIds, status, adminId, reason, adminName, adminRole);
+            sendSuccess(res, { count: kycIds.length }, `Bulk updated ${kycIds.length} KYC requests to ${status}`);
+        } catch (error) {
+            next(error);
+        }
+    }
     async getPrivacyPolicy(req: Request, res: Response, next: NextFunction) {
         try {
             const randomPolicy = MOCK_POLICIES[Math.floor(Math.random() * MOCK_POLICIES.length)];

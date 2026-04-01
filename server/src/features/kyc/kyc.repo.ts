@@ -55,8 +55,29 @@ export class KycRepository extends BaseRepository<IKyc> implements IKycRepositor
     async getAllKycList(status?: KycStatus): Promise<IKyc[]> {
         const filter = status ? { kycStatus: status } : {};
         return await KycModel.find(filter)
-            .populate('user', 'name email phone')
+            .populate('user', 'name email phone lastLogin customId')
             .sort({ createdAt: -1 })
             .exec();
+    }
+
+    async bulkUpdateKycStatus(ids: string[], status: KycStatus, adminId: string, reason?: string, adminName?: string, adminRole?: string): Promise<any> {
+        const historyEntry = {
+            status,
+            actionBy: adminId,
+            actionByName: adminName || 'Admin',
+            actionByRole: adminRole || 'admin',
+            reason,
+            createdAt: new Date()
+        };
+        const updateData: any = { 
+            kycStatus: status, 
+            reason,
+            $push: { history: historyEntry }
+        };
+        if (status === KycStatus.APPROVED) {
+            updateData.approvedOn = new Date();
+            updateData.approvedBy = adminId;
+        }
+        return await KycModel.updateMany({ _id: { $in: ids } }, updateData).exec();
     }
 }

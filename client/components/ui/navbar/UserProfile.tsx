@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Avatar, Typography } from "@mui/material";
+import { Box, Avatar, Typography, alpha } from "@mui/material";
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
@@ -23,19 +23,27 @@ interface UserProfileProps {
     kycStatus?: string;
     onClick?: (event: React.MouseEvent<HTMLElement>) => void;
     position?: 'left' | 'right';
+    size?: number;
 }
 
-const UserProfile: React.FC<UserProfileProps> = ({ user, kycStatus: kycStatusProp, kycData: kycDataProp, onClick, position = 'right' }) => {
+const UserProfile: React.FC<UserProfileProps> = ({ 
+    user, 
+    kycStatus: kycStatusProp, 
+    kycData: kycDataProp, 
+    onClick, 
+    position = 'right',
+    size = 42
+}) => {
     const profilePic = kycDataProp?.profilePicture || user?.kycData?.profilePicture;
     const profilePicUrl = profilePic ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'}/kyc/files/${profilePic}` : null;
 
     const kycConfig = {
-        none: { color: 'text.disabled', label: 'Not Verified', icon: <PendingIcon sx={{ fontSize: '0.8rem' }} /> },
-        pending: { color: 'warning.main', label: 'Pending Verification', icon: <PendingIcon sx={{ fontSize: '0.8rem' }} /> },
+        none: { color: '#9e9e9e', label: 'Not Verified', icon: <PendingIcon sx={{ fontSize: '0.8rem' }} /> },
+        pending: { color: '#ed6c02', label: 'Pending Verification', icon: <PendingIcon sx={{ fontSize: '0.8rem' }} /> },
         approved: { color: '#2e7d32', label: 'Verified', icon: <VerifiedIcon sx={{ fontSize: '0.8rem' }} /> },
-        rejected: { color: 'error.main', label: 'Rejected', icon: <ErrorIcon sx={{ fontSize: '0.8rem' }} /> },
-        returned: { color: 'warning.dark', label: 'Action Required', icon: <ErrorIcon sx={{ fontSize: '0.8rem' }} /> },
-        resubmitted: { color: 'info.main', label: 'Resubmitted', icon: <ReplayIcon sx={{ fontSize: '0.8rem' }} /> },
+        rejected: { color: '#d32f2f', label: 'Rejected', icon: <ErrorIcon sx={{ fontSize: '0.8rem' }} /> },
+        returned: { color: '#f57c00', label: 'Action Required', icon: <ErrorIcon sx={{ fontSize: '0.8rem' }} /> },
+        resubmitted: { color: '#0288d1', label: 'Resubmitted', icon: <ReplayIcon sx={{ fontSize: '0.8rem' }} /> },
         admin: { color: '#2e7d32', label: 'Admin', icon: <VerifiedIcon sx={{ fontSize: '0.8rem' }} /> },
     };
 
@@ -43,61 +51,59 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, kycStatus: kycStatusPro
     const status = isAdmin ? 'admin' : (kycStatusProp?.toLowerCase() || user?.kycStatus?.toLowerCase() || 'none') as keyof typeof kycConfig;
     const config = kycConfig[status] || kycConfig.none;
 
+    const getInitials = (name: string) => {
+        return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+    };
+
     return (
         <Box
             sx={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: 1.5,
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                '&:hover': { opacity: 0.8 },
+                cursor: onClick ? 'pointer' : 'default',
+                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                '&:hover': onClick ? { 
+                    '& .profile-avatar': { transform: 'scale(1.05)', boxShadow: `0 4px 12px ${alpha(config.color as string, 0.2)}` },
+                    '& .profile-info': { opacity: 0.8 }
+                } : {},
                 flexDirection: position === 'left' ? 'row' : 'row'
             }}
             onClick={onClick}
         >
             <Box
+                className="profile-avatar"
                 sx={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: '50%',
+                    width: size,
+                    height: size,
+                    borderRadius: `${(size / 42) * 12}px`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    border: '2.5px solid',
+                    border: `${Math.max(1, (size / 42) * 2)}px solid`,
                     borderColor: config.color,
-                    p: '2px',
-                    bgcolor: 'transparent'
+                    p: `${Math.max(1, (size / 42) * 2)}px`,
+                    bgcolor: 'transparent',
+                    transition: 'all 0.3s ease'
                 }}
             >
-                <Box
+                <Avatar
+                    src={profilePicUrl || undefined}
                     sx={{
                         width: '100%',
                         height: '100%',
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        bgcolor: 'transparent',
-                        overflow: 'hidden'
+                        borderRadius: `${(size / 42) * 10}px`,
+                        bgcolor: profilePicUrl ? 'transparent' : alpha(config.color as string, 0.1),
+                        color: config.color,
+                        fontWeight: 900,
+                        fontSize: `${(size / 42) * 1}rem`,
+                        border: profilePicUrl ? 'none' : `1px dashed ${alpha(config.color as string, 0.3)}`
                     }}
                 >
-                    {profilePicUrl ? (
-                        <Box 
-                            component="img" 
-                            src={profilePicUrl} 
-                            sx={{ 
-                                width: '100%', 
-                                height: '100%', 
-                                objectFit: 'cover' 
-                            }} 
-                        />
-                    ) : (
-                        <PersonOutlineIcon sx={{ fontSize: '1.3rem', color: 'text.secondary' }} />
-                    )}
-                </Box>
+                    {user?.name ? getInitials(user.name) : <PersonOutlineIcon sx={{ fontSize: `${(size / 42) * 1.4}rem` }} />}
+                </Avatar>
             </Box>
-            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', maxWidth: 120 }}>
+            <Box className="profile-info" sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', maxWidth: 140, transition: 'all 0.2s ease' }}>
                 <Typography
                     variant="body2"
                     sx={{

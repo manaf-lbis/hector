@@ -16,6 +16,7 @@ router.put('/me/location', authMiddleware, userController.updateLocation.bind(us
 router.get('/all', authMiddleware, roleMiddleware([Roles.admin]), userController.getAllUsers.bind(userController));
 router.get('/:id', authMiddleware, roleMiddleware([Roles.admin]), userController.getUserById.bind(userController));
 router.get('/logs/:userId', authMiddleware, roleMiddleware([Roles.admin]), userController.getLoginLogs.bind(userController));
+router.patch("/bulk-status", authMiddleware, roleMiddleware([Roles.admin]), userController.bulkUpdateUserStatus.bind(userController));
 router.patch("/:id/status", authMiddleware, roleMiddleware([Roles.admin]), userController.updateUserStatus.bind(userController));
 
 export default router;

@@ -20,6 +20,7 @@ router.get(/\/files\/(.*)/, authMiddleware, kycController.getFile.bind(kycContro
 
 // Admin routes
 router.get('/pending', authMiddleware, roleMiddleware([Roles.admin]), kycController.getPendingKyc.bind(kycController));
+router.post('/bulk-review', authMiddleware, roleMiddleware([Roles.admin]), kycController.bulkReviewKyc.bind(kycController));
 router.post('/review', authMiddleware, roleMiddleware([Roles.admin]), kycController.reviewKyc.bind(kycController));
 
 export default router;

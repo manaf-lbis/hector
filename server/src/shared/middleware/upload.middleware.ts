@@ -30,3 +30,18 @@ export const kycUpload = multer({
     { name: 'bankPassbook', maxCount: 1 },
     { name: 'profilePicture', maxCount: 1 }
 ]);
+
+export const categoryUpload = multer({
+    storage: storage,
+    limits: { fileSize: 2 * 1024 * 1024 }, // 2MB for categories
+    fileFilter: (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+        const allowedExtensions = ['.jpg', '.jpeg', '.png'];
+        const allowedMimetypes = ['image/jpeg', 'image/png'];
+        const ext = path.extname(file.originalname).toLowerCase();
+        if (allowedExtensions.includes(ext) && allowedMimetypes.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new ApiError('Only .png, .jpg, and .jpeg formats are allowed for categories!', 400) as any);
+        }
+    }
+}).single('image');

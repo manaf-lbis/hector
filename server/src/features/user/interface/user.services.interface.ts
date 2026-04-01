@@ -9,7 +9,7 @@ export interface IUserService {
     updateUserToken({ userId, refreshToken }: { userId: Types.ObjectId, refreshToken: string }): Promise<IUser | null>
     getActiveUserById({ userId }: { userId: Types.ObjectId }): Promise<IUser | null>
     getUserById({ userId }: { userId: Types.ObjectId }): Promise<IUser | null>
-    getAllUsers(page?: number, limit?: number, search?: string, status?: string): Promise<{ 
+    getAllUsers(page?: number, limit?: number, search?: string, status?: string, excludeId?: string): Promise<{ 
         users: IUser[], 
         total: number,
         counts: { [key: string]: number }
@@ -17,4 +17,5 @@ export interface IUserService {
     recordLogin(userId: Types.ObjectId, ip?: string, userAgent?: string): Promise<void>
     getLoginLogs(userId: string, limit: number): Promise<any[]>
     updateUserStatus(userId: string, status: UserStatus): Promise<IUser | null>
+    bulkUpdateUserStatus(userIds: string[], status: UserStatus): Promise<any>
 }

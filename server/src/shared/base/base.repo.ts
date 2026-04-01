@@ -58,6 +58,11 @@ export class BaseRepository<T extends Document> implements IBaseRepository<T> {
     ).exec();
   }
 
+  async updateMany(query: QueryFilter<T>, data: Partial<T>): Promise<any> {
+    return await this._model.updateMany(query as any, data as any).exec();
+  }
 
-
+  async deleteMany(query: QueryFilter<T>): Promise<any> {
+    return await this._model.deleteMany(query as any).exec();
+  }
 }

@@ -16,7 +16,9 @@ import { useLogoutMutation } from "@/store/api/auth.api";
 import { useCurrentLocation } from "@/hooks/useCurrentLocation";
 import LocationSelector from "../ui/location/LocationSelector";
 import LocationOnIcon from '@mui/icons-material/LocationOn';
-import { Typography } from "@mui/material";
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import { Typography, IconButton, Badge } from "@mui/material";
 
 const UserNavbar = () => {
     const { user } = useSelector((state: RootState) => state.user);
@@ -119,7 +121,19 @@ const UserNavbar = () => {
                         currentLocation={user?.location}
                     />
 
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, md: 2 } }}>
+                        <IconButton size="small" sx={{ color: 'text.secondary', bgcolor: 'action.hover' }}>
+                            <Badge variant="dot" color="error">
+                                <NotificationsIcon fontSize="small" />
+                            </Badge>
+                        </IconButton>
+                        
+                        {user?.role !== 'admin' && (
+                            <IconButton size="small" sx={{ color: 'text.secondary', bgcolor: 'action.hover' }}>
+                                <AccountBalanceWalletIcon fontSize="small" />
+                            </IconButton>
+                        )}
+
                         <Box onClick={toggleDrawer(true)} sx={{ cursor: 'pointer' }}>
                             <UserProfile user={user} kycStatus={currentKycStatus} kycData={currentKycData} position="right" />
                         </Box>

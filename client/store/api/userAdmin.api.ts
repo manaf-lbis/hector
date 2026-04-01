@@ -31,6 +31,14 @@ export const userAdminApi = createApi({
             }),
             invalidatesTags: (result, error, { userId }) => [{ type: 'User', id: userId }, 'User'],
         }),
+        bulkUpdateUserStatus: builder.mutation<any, { userIds: string[], status: string }>({
+            query: (body) => ({
+                url: '/users/bulk-status',
+                method: 'PATCH',
+                body,
+            }),
+            invalidatesTags: ['User'],
+        }),
     }),
 });
 
@@ -38,5 +46,6 @@ export const {
     useGetAllUsersQuery, 
     useGetUserDetailsQuery,
     useGetLoginLogsQuery,
-    useUpdateUserStatusMutation 
+    useUpdateUserStatusMutation,
+    useBulkUpdateUserStatusMutation 
 } = userAdminApi;
